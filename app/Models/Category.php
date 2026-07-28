@@ -5,23 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Company extends Model
+class Category extends Model
 {
-    /** @use HasFactory<\Database\Factories\CompanyFactory> */
+    /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'location',
-        'logo',
-        'user_id',
+        'title',
+        'created_by',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
     public function jobs()
     {
         return $this->hasMany(Job::class);

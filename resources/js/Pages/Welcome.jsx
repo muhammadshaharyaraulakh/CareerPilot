@@ -13,7 +13,7 @@ import Testimonials from '../Components/Welcome/Testimonials';
 import DualBanner from '../Components/Welcome/DualBanner';
 import Footer from '../Components/Welcome/Footer';
 
-export default function Welcome({ auth, laravelVersion, phpVersion }) {
+export default function Welcome({ auth, laravelVersion, phpVersion, categories }) {
     return (
         <>
             <Head title="Jobpilot - Find A Job That Suits Your Interest & Skills" />
@@ -33,7 +33,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     <StatsSection />
 
                     {/* 5. Most Popular Vacancies Section */}
-                    <PopularVacancies />
+                    <PopularVacancies categories={categories} />
 
                     {/* 6. How Jobpilot Work Section */}
                     <HowItWorks />

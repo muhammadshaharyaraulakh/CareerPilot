@@ -1,71 +1,102 @@
-import React from 'react';
-import { BriefcaseIcon, BuildingOffice2Icon, UserGroupIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from 'react';
+
+// Animated Counter Component
+function AnimatedCounter({ value, duration = 1800 }) {
+    const target = parseInt(String(value).replace(/,/g, ''), 10) || 0;
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        let startTime = null;
+        let animationFrameId;
+
+        const animate = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Ease out cubic function for smooth natural deceleration
+            const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(easeOutProgress * target);
+
+            setCount(current);
+
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                setCount(target);
+            }
+        };
+
+        animationFrameId = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        };
+    }, [target, duration]);
+
+    return <span>{count.toLocaleString('en-US')}</span>;
+}
 
 export default function StatsSection() {
-    const stats = [
-        {
-            id: 1,
-            count: '1,75,324',
-            label: 'Live Job',
-            icon: BriefcaseIcon,
-            highlighted: false,
-        },
-        {
-            id: 2,
-            count: '97,354',
-            label: 'Companies',
-            icon: BuildingOffice2Icon,
-            highlighted: true, // blue box background for icon as shown in screenshot
-        },
-        {
-            id: 3,
-            count: '38,47,154',
-            label: 'Candidates',
-            icon: UserGroupIcon,
-            highlighted: false,
-        },
-        {
-            id: 4,
-            count: '7,532',
-            label: 'New Jobs',
-            icon: BriefcaseIcon,
-            highlighted: false,
-        },
+    const statistics = [
+        { value: '1,754', label: 'Live Job', icon: '/images/icons/icon-2.svg', highlighted: false },
+        { value: '9,735', label: 'Companies', icon: '/images/icons/icon.svg', highlighted: true },
+        { value: '3,841', label: 'Candidates', icon: '/images/icons/icon-1.svg', highlighted: false },
+        { value: '7,532', label: 'New Jobs', icon: '/images/icons/icon-2.svg', highlighted: false },
     ];
 
     return (
-        <section className="w-full bg-[#F8F9FA] pb-16 pt-4 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {stats.map((stat) => {
-                    const IconComponent = stat.icon;
-                    return (
+        <section className="w-full bg-[#f1f2f4] pt-14 sm:pt-20 lg:pt-28 pb-20 sm:pb-24 lg:pb-32 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1320px]">
+                <div className="grid grid-cols-1 min-[576px]:grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+                    {statistics.map((s, idx) => (
                         <div
-                            key={stat.id}
-                            className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-100/80 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center gap-4 sm:gap-5 group"
+                            key={idx}
+                            className={`group cursor-pointer rounded-2xl bg-white p-5 sm:p-6 flex items-center gap-4 sm:gap-5 transition-all duration-300 ${
+                                s.highlighted
+                                    ? 'shadow-[0_12px_48px_rgba(0,44,109,0.12)] ring-1 ring-black/5 -translate-y-0.5'
+                                    : 'shadow-[0_2px_14px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-0.5'
+                            }`}
                         >
-                            {/* Icon Container */}
+                            {/* Icon Container Box (Fixed size on all screen sizes) */}
                             <div
-                                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${
-                                    stat.highlighted
-                                        ? 'bg-[#0A65CC] text-white shadow-md shadow-[#0A65CC]/30'
+                                className={`w-[68px] h-[68px] rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 ${
+                                    s.highlighted
+                                        ? 'bg-[#0A65CC] text-white shadow-md shadow-[#0A65CC]/25'
                                         : 'bg-[#E7F0FA] text-[#0A65CC]'
                                 }`}
                             >
-                                <IconComponent className="w-7 h-7 stroke-[1.8]" />
+                                <img
+                                    src={s.icon}
+                                    alt={s.label}
+                                    className="h-11 w-11 object-contain"
+                                    onError={(e) => {
+                                        // Show fallback icon if image isn't loaded
+                                        e.target.style.display = 'none';
+                                        const fallback = e.target.nextElementSibling;
+                                        if (fallback) fallback.style.display = 'block';
+                                    }}
+                                />
+                                {/* Fallback Icon */}
+                                <svg className="hidden h-9 w-9 fill-current" viewBox="0 0 24 24">
+                                    <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
+                                </svg>
                             </div>
 
-                            {/* Stat Numbers and Label */}
-                            <div className="flex flex-col">
-                                <span className="text-xl sm:text-2xl font-bold text-[#18191C] tracking-tight group-hover:text-[#0A65CC] transition-colors">
-                                    {stat.count}
-                                </span>
-                                <span className="text-xs sm:text-sm font-medium text-[#767E94] mt-0.5">
-                                    {stat.label}
-                                </span>
+                            {/* Stat Content */}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-lg sm:text-2xl lg:text-[26px] font-medium leading-tight text-[#18191C] tracking-tight truncate">
+                                    <AnimatedCounter value={s.value} />
+                                </p>
+                                <p className="text-xs sm:text-sm font-normal text-[#767E94] mt-1 truncate">
+                                    {s.label}
+                                </p>
                             </div>
                         </div>
-                    );
-                })}
+                    ))}
+                </div>
             </div>
         </section>
     );

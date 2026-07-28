@@ -4,55 +4,82 @@ import { PhoneIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 export default function TopHeader() {
     return (
-        <div className="w-full bg-[#F1F2F4] border-b border-gray-200/80 text-xs sm:text-sm text-[#5E6670] transition-colors duration-150">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col md:flex-row items-center justify-between min-h-[44px] py-2 md:py-0 gap-2 md:gap-0">
-                    {/* Navigation Links */}
-                    <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 overflow-x-auto w-full md:w-auto no-scrollbar py-1 md:py-0">
+        <div className="hidden min-[576px]:block w-full bg-[#F1F2F4] border-b border-gray-200/80 text-xs sm:text-sm text-[#5E6670] px-4 sm:px-6 lg:px-8 transition-colors duration-150">
+            <div className="max-w-[1320px] mx-auto">
+                <div className="flex items-center justify-between h-[44px]">
+                    <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 overflow-x-auto w-full min-[950px]:w-auto no-scrollbar h-full justify-between min-[950px]:justify-start">
                         <Link 
                             href="#" 
-                            className="font-medium text-[#0A65CC] relative py-1 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-[#0A65CC] after:rounded-full shrink-0"
+                            className=" text-[#0A65CC] flex items-center h-full relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#0A65CC] shrink-0"
                         >
                             Home
                         </Link>
-                        <Link href="#" className="hover:text-[#0A65CC] transition-colors duration-200 shrink-0">
+                        <Link 
+                            href="#" 
+                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
+                        >
                             Find Job
                         </Link>
-                        <Link href="#" className="hover:text-[#0A65CC] transition-colors duration-200 shrink-0">
+                        <Link 
+                            href="#" 
+                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
+                        >
                             Employers
                         </Link>
-                        <Link href="#" className="hover:text-[#0A65CC] transition-colors duration-200 shrink-0">
+                        <Link 
+                            href="#" 
+                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
+                        >
                             Candidates
                         </Link>
-                        <Link href="#" className="hover:text-[#0A65CC] transition-colors duration-200 shrink-0">
+                        <Link 
+                            href="#" 
+                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
+                        >
                             Pricing Plans
                         </Link>
-                        <Link href="#" className="hover:text-[#0A65CC] transition-colors duration-200 shrink-0">
+                        <Link 
+                            href="#" 
+                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
+                        >
                             Customer Supports
                         </Link>
                     </nav>
 
-                    {/* Right side Info: Phone & Language */}
-                    <div className="flex items-center gap-4 sm:gap-6 text-xs text-[#18191C] font-medium shrink-0 self-end md:self-auto">
+                    <div className="hidden min-[950px]:flex items-center gap-4 sm:gap-6 text-xs text-[#18191C] font-medium shrink-0">
                         <div className="flex items-center gap-2 hover:text-[#0A65CC] cursor-pointer transition-colors">
                             <PhoneIcon className="w-4 h-4 text-[#18191C]" />
-                            <span>+1-202-555-0178</span>
+                            <span>+92 3104510283</span>
                         </div>
                         
-                        {/* Language Selector */}
                         <div className="flex items-center gap-1.5 hover:text-[#0A65CC] cursor-pointer transition-colors">
-                            <span className="flex items-center overflow-hidden rounded-[2px] w-5 h-3.5 shadow-sm">
-                                <svg viewBox="0 0 640 480" className="w-full h-full object-cover">
-                                    <g fillRule="evenodd">
-                                        <g strokeWidth="1pt">
-                                            <path fill="#bd3d44" d="M0 0h640v480H0z"/>
-                                            <path fill="#fff" d="M0 36.9h640v36.9H0zm0 73.8h640v36.9H0zm0 73.9h640v36.9H0zm0 73.8h640v36.9H0zm0 73.9h640v36.9H0zm0 73.8h640v36.9H0z"/>
-                                        </g>
-                                        <path fill="#192f5d" d="M0 0h295.4v258.5H0z"/>
-                                    </g>
+                            <span className="flex items-center overflow-hidden rounded-[2px] w-5 h-3.5 shadow-xs relative">
+                                <img
+                                    src="/images/flags/pk.svg"
+                                    alt="Pakistan Flag"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        if (e.target.nextElementSibling) {
+                                            e.target.nextElementSibling.style.display = 'block';
+                                        }
+                                    }}
+                                />
+                                <svg
+                                    viewBox="0 0 300 200"
+                                    className="hidden w-full h-full object-cover"
+                                >
+                                    <rect width="300" height="200" fill="#01411C" />
+                                    <rect width="75" height="200" fill="#FFFFFF" />
+                                    <circle cx="187.5" cy="100" r="45" fill="#FFFFFF" />
+                                    <circle cx="198" cy="92" r="40" fill="#01411C" />
+                                    <polygon
+                                        points="198,62 203,77 218,77 206,86 210,101 198,92 186,101 190,86 178,77 193,77"
+                                        fill="#FFFFFF"
+                                    />
                                 </svg>
                             </span>
-                            <span>English</span>
+                            <span>Pakistan</span>
                             <ChevronDownIcon className="w-3.5 h-3.5 text-[#5E6670]" />
                         </div>
                     </div>

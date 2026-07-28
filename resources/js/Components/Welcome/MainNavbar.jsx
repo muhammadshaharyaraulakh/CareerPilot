@@ -1,100 +1,217 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { MagnifyingGlassIcon, ChevronDownIcon, BriefcaseIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, BriefcaseIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MainNavbar({ auth }) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [country, setCountry] = useState('India');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const country = 'Pakistan';
+
+    const navLinks = [
+        { name: 'Home', href: '#' },
+        { name: 'Find Job', href: '#' },
+        { name: 'Employers', href: '#' },
+        { name: 'Candidates', href: '#' },
+        { name: 'Pricing Plans', href: '#' },
+        { name: 'Customer Supports', href: '#' },
+    ];
 
     return (
-        <header className="w-full bg-white border-b border-gray-100 py-3.5 px-4 sm:px-6 lg:px-8 transition-all">
-            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-                {/* Left: Logo & Header Search Bar */}
-                <div className="flex items-center gap-6 lg:gap-10 flex-1">
-                    {/* Brand Logo */}
-                    <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-                        <div className="w-10 h-10 bg-[#0A65CC] rounded-xl flex items-center justify-center text-white shadow-md shadow-[#0A65CC]/20 group-hover:scale-105 transition-transform duration-200">
-                            <BriefcaseIcon className="w-6 h-6 stroke-[2.2]" />
-                        </div>
-                        <span className="text-2xl font-bold text-[#18191C] tracking-tight group-hover:text-[#0A65CC] transition-colors">
-                            Jobpilot
-                        </span>
+        <header className="w-full bg-white border-b border-gray-200/80 py-3 px-4 sm:px-6 lg:px-8 relative z-40">
+            <div className="max-w-[1320px] mx-auto flex items-center justify-between gap-4">
+                <div className="flex items-center gap-6 lg:gap-8 flex-1">
+                    <Link href="/" className="flex items-center shrink-0">
+                        <svg width="143" height="40" viewBox="0 0 143 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-9 sm:h-10 w-auto">
+                            <g clipPath="url(#clip0_desktop_logo)">
+                                <path d="M33.7512 11.25H6.25122C5.56086 11.25 5.00122 11.8096 5.00122 12.5V32.5C5.00122 33.1904 5.56086 33.75 6.25122 33.75H33.7512C34.4416 33.75 35.0012 33.1904 35.0012 32.5V12.5C35.0012 11.8096 34.4416 11.25 33.7512 11.25Z" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M26.25 11.25V8.75C26.25 8.08696 25.9866 7.45107 25.5178 6.98223C25.0489 6.51339 24.413 6.25 23.75 6.25H16.25C15.587 6.25 14.9511 6.51339 14.4822 6.98223C14.0134 7.45107 13.75 8.08696 13.75 8.75V11.25" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M35.0013 19.7358C30.4424 22.3734 25.2669 23.7583 20 23.75C14.734 23.7583 9.55941 22.3739 5.00104 19.7371" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M18.125 18.75H21.875" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </g>
+                            <path d="M56.608 11.5455H59.7443V23.8182C59.7386 24.9432 59.5 25.9119 59.0284 26.7244C58.5568 27.5312 57.8977 28.1534 57.0511 28.5909C56.2102 29.0227 55.2301 29.2386 54.1108 29.2386C53.0881 29.2386 52.1676 29.0568 51.3494 28.6932C50.5369 28.3239 49.892 27.7784 49.4148 27.0568C48.9375 26.3352 48.6989 25.4375 48.6989 24.3636H51.8438C51.8494 24.8352 51.9517 25.2415 52.1506 25.5824C52.3551 25.9233 52.6364 26.1847 52.9943 26.3665C53.3523 26.5483 53.7642 26.6392 54.2301 26.6392C54.7358 26.6392 55.1648 26.5341 55.517 26.3239C55.8693 26.108 56.1364 25.7898 56.3182 25.3693C56.5057 24.9489 56.6023 24.4318 56.608 23.8182V11.5455ZM68.7486 29.2557C67.4702 29.2557 66.3622 28.9744 65.4247 28.4119C64.4872 27.8494 63.7599 27.0625 63.2429 26.0511C62.7315 25.0398 62.4759 23.858 62.4759 22.5057C62.4759 21.1534 62.7315 19.9687 63.2429 18.9517C63.7599 17.9347 64.4872 17.1449 65.4247 16.5824C66.3622 16.0199 67.4702 15.7386 68.7486 15.7386C70.027 15.7386 71.1349 16.0199 72.0724 16.5824C73.0099 17.1449 73.7344 17.9347 74.2457 18.9517C74.7628 19.9687 75.0213 21.1534 75.0213 22.5057C75.0213 23.858 74.7628 25.0398 74.2457 26.0511C73.7344 27.0625 73.0099 27.8494 72.0724 28.4119C71.1349 28.9744 70.027 29.2557 68.7486 29.2557ZM68.7656 26.7841C69.4588 26.7841 70.0384 26.5937 70.5043 26.2131C70.9702 25.8267 71.3168 25.3097 71.544 24.6619C71.777 24.0142 71.8935 23.2926 71.8935 22.4972C71.8935 21.696 71.777 20.9716 71.544 20.3239C71.3168 19.6705 70.9702 19.1506 70.5043 18.7642C70.0384 18.3778 69.4588 18.1847 68.7656 18.1847C68.0554 18.1847 67.4645 18.3778 66.9929 18.7642C66.527 19.1506 66.1776 19.6705 65.9446 20.3239C65.7173 20.9716 65.6037 21.696 65.6037 22.4972C65.6037 23.2926 65.7173 24.0142 65.9446 24.6619C66.1776 25.3097 66.527 25.8267 66.9929 26.2131C67.4645 26.5937 68.0554 26.7841 68.7656 26.7841ZM77.7763 29V11.5455H80.8615V18.0739H80.9893C81.1484 17.7557 81.3729 17.4176 81.6626 17.0597C81.9524 16.696 82.3445 16.3864 82.8388 16.1307C83.3331 15.8693 83.9638 15.7386 84.7308 15.7386C85.7422 15.7386 86.6541 15.9972 87.4666 16.5142C88.2848 17.0256 88.9325 17.7841 89.4098 18.7898C89.8928 19.7898 90.1342 21.017 90.1342 22.4716C90.1342 23.9091 89.8984 25.1307 89.4268 26.1364C88.9553 27.142 88.3132 27.9091 87.5007 28.4375C86.6882 28.9659 85.7678 29.2301 84.7393 29.2301C83.9893 29.2301 83.3672 29.1051 82.8729 28.8551C82.3786 28.6051 81.9808 28.304 81.6797 27.9517C81.3842 27.5937 81.1541 27.2557 80.9893 26.9375H80.8104V29H77.7763ZM80.8018 22.4545C80.8018 23.3011 80.9212 24.0426 81.1598 24.679C81.4041 25.3153 81.7536 25.8125 82.2081 26.1705C82.6683 26.5227 83.2251 26.6989 83.8786 26.6989C84.5604 26.6989 85.1314 26.517 85.5916 26.1534C86.0518 25.7841 86.3984 25.2812 86.6314 24.6449C86.87 24.0028 86.9893 23.2727 86.9893 22.4545C86.9893 21.642 86.8729 20.9205 86.6399 20.2898C86.407 19.6591 86.0604 19.1648 85.6001 18.8068C85.1399 18.4489 84.5661 18.2699 83.8786 18.2699C83.2195 18.2699 82.6598 18.4432 82.1996 18.7898C81.7393 19.1364 81.3899 19.6222 81.1513 20.2472C80.9183 20.8722 80.8018 21.608 80.8018 22.4545ZM92.7571 33.9091V15.9091H95.7912V18.0739H95.9702C96.1293 17.7557 96.3537 17.4176 96.6435 17.0597C96.9332 16.696 97.3253 16.3864 97.8196 16.1307C98.3139 15.8693 98.9446 15.7386 99.7116 15.7386C100.723 15.7386 101.635 15.9972 102.447 16.5142C103.266 17.0256 103.913 17.7841 104.391 18.7898C104.874 19.7898 105.115 21.017 105.115 22.4716C105.115 23.9091 104.879 25.1307 104.408 26.1364C103.936 27.142 103.294 27.9091 102.482 28.4375C101.669 28.9659 100.749 29.2301 99.7202 29.2301C98.9702 29.2301 98.348 29.1051 97.8537 28.8551C97.3594 28.6051 96.9616 28.304 96.6605 27.9517C96.3651 27.5937 96.1349 27.2557 95.9702 26.9375H95.8423V33.9091H92.7571ZM95.7827 22.4545C95.7827 23.3011 95.902 24.0426 96.1406 24.679C96.3849 25.3153 96.7344 25.8125 97.1889 26.1705C97.6491 26.5227 98.206 26.6989 98.8594 26.6989C99.5412 26.6989 100.112 26.517 100.572 26.1534C101.033 25.7841 101.379 25.2812 101.612 24.6449C101.851 24.0028 101.97 23.2727 101.97 22.4545C101.97 21.642 101.854 20.9205 101.621 20.2898C101.388 19.6591 101.041 19.1648 100.581 18.8068C100.121 18.4489 99.5469 18.2699 98.8594 18.2699C98.2003 18.2699 97.6406 18.4432 97.1804 18.7898C96.7202 19.1364 96.3707 19.6222 96.1321 20.2472C95.8991 20.8722 95.7827 21.608 95.7827 22.4545ZM107.757 29V15.9091H110.842V29H107.757ZM109.308 14.0511C108.82 14.0511 108.399 13.8892 108.047 13.5653C107.695 13.2358 107.518 12.8409 107.518 12.3807C107.518 11.9148 107.695 11.5199 108.047 11.196C108.399 10.8665 108.82 10.7017 109.308 10.7017C109.803 10.7017 110.223 10.8665 110.57 11.196C110.922 11.5199 111.098 11.9148 111.098 12.3807C111.098 12.8409 110.922 13.2358 110.57 13.5653C110.223 13.8892 109.803 14.0511 109.308 14.0511ZM117.1 11.5455V29H114.015V11.5455H117.1ZM125.983 29.2557C124.705 29.2557 123.597 28.9744 122.659 28.4119C121.722 27.8494 120.994 27.0625 120.477 26.0511C119.966 25.0398 119.71 23.858 119.71 22.5057C119.71 21.1534 119.966 19.9687 120.477 18.9517C120.994 17.9347 121.722 17.1449 122.659 16.5824C123.597 16.0199 124.705 15.7386 125.983 15.7386C127.261 15.7386 128.369 16.0199 129.307 16.5824C130.244 17.1449 130.969 17.9347 131.48 18.9517C131.997 19.9687 132.256 21.1534 132.256 22.5057C132.256 23.858 131.997 25.0398 131.48 26.0511C130.969 27.0625 130.244 27.8494 129.307 28.4119C128.369 28.9744 127.261 29.2557 125.983 29.2557ZM126 26.7841C126.693 26.7841 127.273 26.5937 127.739 26.2131C128.205 25.8267 128.551 25.3097 128.778 24.6619C129.011 24.0142 129.128 23.2926 129.128 22.4972C129.128 21.696 129.011 20.9716 128.778 20.3239C128.551 19.6705 128.205 19.1506 127.739 18.7642C127.273 18.3778 126.693 18.1847 126 18.1847C125.29 18.1847 124.699 18.3778 124.227 18.7642C123.761 19.1506 123.412 19.6705 123.179 20.3239C122.952 20.9716 122.838 21.696 122.838 22.4972C122.838 23.2926 122.952 24.0142 123.179 24.6619C123.412 25.3097 123.761 25.8267 124.227 26.2131C124.699 26.5937 125.29 26.7841 126 26.7841ZM141.411 15.9091V18.2955H133.886V15.9091H141.411ZM135.744 12.7727H138.829V25.0625C138.829 25.4773 138.891 25.7955 139.016 26.017C139.147 26.233 139.317 26.3807 139.528 26.4602C139.738 26.5398 139.971 26.5795 140.227 26.5795C140.42 26.5795 140.596 26.5653 140.755 26.5369C140.92 26.5085 141.045 26.483 141.13 26.4602L141.65 28.8722C141.485 28.929 141.249 28.9915 140.942 29.0597C140.641 29.1278 140.272 29.1676 139.835 29.179C139.062 29.2017 138.366 29.0852 137.746 28.8295C137.127 28.5682 136.636 28.1648 136.272 27.6193C135.914 27.0739 135.738 26.392 135.744 25.5739V12.7727Z" fill="#18191C"/>
+                            <defs>
+                                <clipPath id="clip0_desktop_logo">
+                                    <rect width="40" height="40" fill="white"/>
+                                </clipPath>
+                            </defs>
+                        </svg>
                     </Link>
 
-                    {/* Integrated Country Selector & Quick Search */}
-                    <div className="hidden md:flex items-center flex-1 max-w-xl border border-gray-200 rounded-lg overflow-hidden focus-within:border-[#0A65CC] focus-within:ring-2 focus-within:ring-[#0A65CC]/15 transition-all duration-200">
-                        {/* Country Selector */}
-                        <div className="flex items-center gap-2 px-3.5 py-2.5 bg-gray-50/50 border-r border-gray-200 cursor-pointer hover:bg-gray-100/60 transition-colors shrink-0">
-                            <span className="flex items-center rounded-sm overflow-hidden w-5 h-3.5 shadow-xs">
-                                <svg viewBox="0 0 640 480" className="w-full h-full object-cover">
-                                    <path fill="#058535" d="M0 0h640v160H0z"/>
-                                    <path fill="#fff" d="M0 160h640v160H0z"/>
-                                    <path fill="#000" d="M0 320h640v160H0z"/>
-                                    <circle cx="320" cy="240" r="60" fill="none" stroke="#000080" strokeWidth="12"/>
+                    <div className="hidden min-[920px]:flex items-center flex-1 max-w-[668px] h-[50px] border border-[#E4E5E8] rounded-md bg-white px-3 focus-within:border-[#0A65CC] focus-within:ring-1 focus-within:ring-[#0A65CC] transition-all">
+                        <div className="flex items-center gap-2 shrink-0 pr-3 border-r border-[#E4E5E8]">
+                            <span className="w-6 h-4 rounded-[2px] overflow-hidden shrink-0 shadow-xs border border-gray-100 flex items-center justify-center bg-white relative">
+                                <img
+                                    src="/images/flags/pk.svg"
+                                    alt="Pakistan Flag"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        if (e.target.nextElementSibling) {
+                                            e.target.nextElementSibling.style.display = 'block';
+                                        }
+                                    }}
+                                />
+                                <svg
+                                    viewBox="0 0 300 200"
+                                    className="hidden w-full h-full object-cover"
+                                >
+                                    <rect width="300" height="200" fill="#01411C" />
+                                    <rect width="75" height="200" fill="#FFFFFF" />
+                                    <circle cx="187.5" cy="100" r="45" fill="#FFFFFF" />
+                                    <circle cx="198" cy="92" r="40" fill="#01411C" />
+                                    <polygon
+                                        points="198,62 203,77 218,77 206,86 210,101 198,92 186,101 190,86 178,77 193,77"
+                                        fill="#FFFFFF"
+                                    />
                                 </svg>
                             </span>
-                            <span className="text-xs font-semibold text-[#18191C]">{country}</span>
-                            <ChevronDownIcon className="w-3.5 h-3.5 text-gray-500" />
+                            <span className="text-sm font-normal text-[#18191C]">{country}</span>
                         </div>
 
-                        {/* Search Input */}
-                        <div className="flex items-center flex-1 px-3 py-2 bg-white">
+                        <div className="flex items-center flex-1 pl-3 bg-white h-full">
                             <MagnifyingGlassIcon className="w-5 h-5 text-[#0A65CC] mr-2.5 shrink-0" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Job title, keyword, company"
-                                className="w-full text-xs sm:text-sm text-[#18191C] placeholder-gray-400 border-none outline-none focus:ring-0 p-0"
+                                className="w-full text-sm text-[#18191C] placeholder-[#9199A3] border-none outline-none focus:ring-0 p-0 bg-transparent"
                             />
                         </div>
                     </div>
                 </div>
 
-                {/* Right: Auth Action Buttons */}
-                <div className="flex items-center gap-3 shrink-0">
-                    {auth && auth.user ? (
-                        <Link
-                            href={route('dashboard')}
-                            className="inline-flex items-center justify-center px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#0A65CC] hover:bg-[#0851A8] rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
-                        >
-                            Dashboard
-                        </Link>
-                    ) : (
-                        <>
-                            <Link
-                                href={route('login')}
-                                className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-[#0A65CC] border border-[#0A65CC]/30 hover:border-[#0A65CC] hover:bg-[#0A65CC]/5 rounded-md transition-all duration-200"
-                            >
-                                Sign In
-                            </Link>
-                            <Link
-                                href={route('register')}
-                                className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#0A65CC] hover:bg-[#0851A8] rounded-md shadow-sm transition-all duration-200 hover:shadow-md"
-                            >
-                                Post A Jobs
-                            </Link>
-                        </>
-                    )}
+                <div className="hidden min-[576px]:flex items-center gap-3 shrink-0">
+                    <Link
+                        href={route('login')}
+                        className="inline-flex items-center justify-center h-[50px] px-6 text-base font-medium text-[#0A65CC] bg-white border border-[#CEE0F5] hover:bg-[#E7F0FA] rounded-md transition-colors"
+                    >
+                        Sign In
+                    </Link>
+                    <Link
+                        href={route('register')}
+                        className="inline-flex items-center justify-center h-[50px] px-7 text-base font-medium text-white bg-[#0A65CC] hover:bg-[#0851A8] rounded-md transition-colors"
+                    >
+                        Post A Job
+                    </Link>
                 </div>
+
+                {/* Mobile Hamburger Button (Visible on <576px) */}
+                <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className="flex min-[576px]:hidden items-center justify-center p-2 rounded-md text-[#18191C] hover:bg-gray-100 focus:outline-none transition-colors"
+                    aria-label="Open Mobile Menu"
+                >
+                    <Bars3Icon className="w-7 h-7 stroke-[2]" />
+                </button>
             </div>
 
-            {/* Mobile Search Bar (visible on screens < 768px down to 320px) */}
-            <div className="mt-3 md:hidden">
-                <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-[#0A65CC] focus-within:ring-2 focus-within:ring-[#0A65CC]/15 transition-all">
-                    <div className="flex items-center flex-1 px-3 py-2 bg-white">
-                        <MagnifyingGlassIcon className="w-4 h-4 text-[#0A65CC] mr-2 shrink-0" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Job title, keyword, company..."
-                            className="w-full text-xs text-[#18191C] placeholder-gray-400 border-none outline-none focus:ring-0 p-0"
+            {/* Mobile Slide-Over Drawer with Framer Motion Animations */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <div className="fixed inset-0 z-50 overflow-hidden">
+                        {/* Backdrop Overlay with Smooth Fade */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+                            onClick={() => setIsMobileMenuOpen(false)}
                         />
+
+                        {/* Drawer Content with Spring Physics Slide-In from Right */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+                            className="fixed top-0 right-0 w-[280px] xs:w-[320px] max-w-[85vw] h-full bg-white shadow-2xl p-6 flex flex-col justify-between z-50 overflow-y-auto"
+                        >
+                            {/* Top: Drawer Header with Logo & Close Button */}
+                            <div>
+                                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                                    <Link
+                                        href="/"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center shrink-0"
+                                    >
+                                        <svg width="143" height="40" viewBox="0 0 143 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-8 w-auto">
+                                            <g clipPath="url(#clip0_mobile_drawer_logo)">
+                                                <path d="M33.7512 11.25H6.25122C5.56086 11.25 5.00122 11.8096 5.00122 12.5V32.5C5.00122 33.1904 5.56086 33.75 6.25122 33.75H33.7512C34.4416 33.75 35.0012 33.1904 35.0012 32.5V12.5C35.0012 11.8096 34.4416 11.25 33.7512 11.25Z" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M26.25 11.25V8.75C26.25 8.08696 25.9866 7.45107 25.5178 6.98223C25.0489 6.51339 24.413 6.25 23.75 6.25H16.25C15.587 6.25 14.9511 6.51339 14.4822 6.98223C14.0134 7.45107 13.75 8.08696 13.75 8.75V11.25" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M35.0013 19.7358C30.4424 22.3734 25.2669 23.7583 20 23.75C14.734 23.7583 9.55941 22.3739 5.00104 19.7371" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                <path d="M18.125 18.75H21.875" stroke="#0A65CC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </g>
+                                            <path d="M56.608 11.5455H59.7443V23.8182C59.7386 24.9432 59.5 25.9119 59.0284 26.7244C58.5568 27.5312 57.8977 28.1534 57.0511 28.5909C56.2102 29.0227 55.2301 29.2386 54.1108 29.2386C53.0881 29.2386 52.1676 29.0568 51.3494 28.6932C50.5369 28.3239 49.892 27.7784 49.4148 27.0568C48.9375 26.3352 48.6989 25.4375 48.6989 24.3636H51.8438C51.8494 24.8352 51.9517 24.2415 52.1506 25.5824C52.3551 25.9233 52.6364 26.1847 52.9943 26.3665C53.3523 26.5483 53.7642 26.6392 54.2301 26.6392C54.7358 26.6392 55.1648 26.5341 55.517 26.3239C55.8693 26.108 56.1364 25.7898 56.3182 25.3693C56.5057 24.9489 56.6023 24.4318 56.608 23.8182V11.5455ZM68.7486 29.2557C67.4702 29.2557 66.3622 28.9744 65.4247 28.4119C64.4872 27.8494 63.7599 27.0625 63.2429 26.0511C62.7315 25.0398 62.4759 23.858 62.4759 22.5057C62.4759 21.1534 62.7315 19.9687 63.2429 18.9517C63.7599 17.9347 64.4872 17.1449 65.4247 16.5824C66.3622 16.0199 67.4702 15.7386 68.7486 15.7386C70.027 15.7386 71.1349 16.0199 72.0724 16.5824C73.0099 17.1449 73.7344 17.9347 74.2457 18.9517C74.7628 19.9687 75.0213 21.1534 75.0213 22.5057C75.0213 23.858 74.7628 25.0398 74.2457 26.0511C73.7344 27.0625 73.0099 27.8494 72.0724 28.4119C71.1349 28.9744 70.027 29.2557 68.7486 29.2557ZM68.7656 26.7841C69.4588 26.7841 70.0384 26.5937 70.5043 26.2131C70.9702 25.8267 71.3168 25.3097 71.544 24.6619C71.777 24.0142 71.8935 23.2926 71.8935 22.4972C71.8935 21.696 71.777 20.9716 71.544 20.3239C71.3168 19.6705 70.9702 19.1506 70.5043 18.7642C70.0384 18.3778 69.4588 18.1847 68.7656 18.1847C68.0554 18.1847 67.4645 18.3778 66.9929 18.7642C66.527 19.1506 66.1776 19.6705 65.9446 20.3239C65.7173 20.9716 65.6037 21.696 65.6037 22.4972C65.6037 23.2926 65.7173 24.0142 65.9446 24.6619C66.1776 25.3097 66.527 25.8267 66.9929 26.2131C67.4645 26.5937 68.0554 26.7841 68.7656 26.7841ZM77.7763 29V11.5455H80.8615V18.0739H80.9893C81.1484 17.7557 81.3729 17.4176 81.6626 17.0597C81.9524 16.696 82.3445 16.3864 82.8388 16.1307C83.3331 15.8693 83.9638 15.7386 84.7308 15.7386C85.7422 15.7386 86.6541 15.9972 87.4666 16.5142C88.2848 17.0256 88.9325 17.7841 89.4098 18.7898C89.8928 19.7898 90.1342 21.017 90.1342 22.4716C90.1342 23.9091 89.8984 25.1307 89.4268 26.1364C88.9553 27.142 88.3132 27.9091 87.5007 28.4375C86.6882 28.9659 85.7678 29.2301 84.7393 29.2301C83.9893 29.2301 83.3672 29.1051 82.8729 28.8551C82.3786 28.6051 81.9808 28.304 81.6797 27.9517C81.3842 27.5937 81.1541 27.2557 80.9893 26.9375H80.8104V29H77.7763ZM80.8018 22.4545C80.8018 23.3011 80.9212 24.0426 81.1598 24.679C81.4041 25.3153 81.7536 25.8125 82.2081 26.1705C82.6683 26.5227 83.2251 26.6989 83.8786 26.6989C84.5604 26.6989 85.1314 26.517 85.5916 26.1534C86.0518 25.7841 86.3984 25.2812 86.6314 24.6449C86.87 24.0028 86.9893 23.2727 86.9893 22.4545C86.9893 21.642 86.8729 20.9205 86.6399 20.2898C86.407 19.6591 86.0604 19.1648 85.6001 18.8068C85.1399 18.4489 84.5661 18.2699 83.8786 18.2699C83.2195 18.2699 82.6598 18.4432 82.1996 18.7898C81.7393 19.1364 81.3899 19.6222 81.1513 20.2472C80.9183 20.8722 80.8018 21.608 80.8018 22.4545ZM92.7571 33.9091V15.9091H95.7912V18.0739H95.9702C96.1293 17.7557 96.3537 17.4176 96.6435 17.0597C96.9332 16.696 97.3253 16.3864 97.8196 16.1307C98.3139 15.8693 98.9446 15.7386 99.7116 15.7386C100.723 15.7386 101.635 15.9972 102.447 16.5142C103.266 17.0256 103.913 17.7841 104.391 18.7898C104.874 19.7898 105.115 21.017 105.115 22.4716C105.115 23.9091 104.879 25.1307 104.408 26.1364C103.936 27.142 103.294 27.9091 102.482 28.4375C101.669 28.9659 100.749 29.2301 99.7202 29.2301C98.9702 29.2301 98.348 29.1051 97.8537 28.8551C97.3594 28.6051 96.9616 28.304 96.6605 27.9517C96.3651 27.5937 96.1349 27.2557 95.9702 26.9375H95.8423V33.9091H92.7571ZM95.7827 22.4545C95.7827 23.3011 95.902 24.0426 96.1406 24.679C96.3849 25.3153 96.7344 25.8125 97.1889 26.1705C97.6491 26.5227 98.206 26.6989 98.8594 26.6989C99.5412 26.6989 100.112 26.517 100.572 26.1534C101.033 25.7841 101.379 25.2812 101.612 24.6449C101.851 24.0028 101.97 23.2727 101.97 22.4545C101.97 21.642 101.854 20.9205 101.621 20.2898C101.388 19.6591 101.041 19.1648 100.581 18.8068C100.121 18.4489 99.5469 18.2699 98.8594 18.2699C98.2003 18.2699 97.6406 18.4432 97.1804 18.7898C96.7202 19.1364 96.3707 19.6222 96.1321 20.2472C95.8991 20.8722 95.7827 21.608 95.7827 22.4545ZM107.757 29V15.9091H110.842V29H107.757ZM109.308 14.0511C108.82 14.0511 108.399 13.8892 108.047 13.5653C107.695 13.2358 107.518 12.8409 107.518 12.3807C107.518 11.9148 107.695 11.5199 108.047 11.196C108.399 10.8665 108.82 10.7017 109.308 10.7017C109.803 10.7017 110.223 10.8665 110.57 11.196C110.922 11.5199 111.098 11.9148 111.098 12.3807C111.098 12.8409 110.922 13.2358 110.57 13.5653C110.223 13.8892 109.803 14.0511 109.308 14.0511ZM117.1 11.5455V29H114.015V11.5455H117.1ZM125.983 29.2557C124.705 29.2557 123.597 28.9744 122.659 28.4119C121.722 27.8494 120.994 27.0625 120.477 26.0511C119.966 25.0398 119.71 23.858 119.71 22.5057C119.71 21.1534 119.966 19.9687 120.477 18.9517C120.994 17.9347 121.722 17.1449 122.659 16.5824C123.597 16.0199 124.705 15.7386 125.983 15.7386C127.261 15.7386 128.369 16.0199 129.307 16.5824C130.244 17.1449 130.969 17.9347 131.48 18.9517C131.997 19.9687 132.256 21.1534 132.256 22.5057C132.256 23.858 131.997 25.0398 131.48 26.0511C130.969 27.0625 130.244 27.8494 129.307 28.4119C128.369 28.9744 127.261 29.2557 125.983 29.2557ZM126 26.7841C126.693 26.7841 127.273 26.5937 127.739 26.2131C128.205 25.8267 128.551 25.3097 128.778 24.6619C129.011 24.0142 129.128 23.2926 129.128 22.4972C129.128 21.696 129.011 20.9716 128.778 20.3239C128.551 19.6705 128.205 19.1506 127.739 18.7642C127.273 18.3778 126.693 18.1847 126 18.1847C125.29 18.1847 124.699 18.3778 124.227 18.7642C123.761 19.1506 123.412 19.6705 123.179 20.3239C122.952 20.9716 122.838 21.696 122.838 22.4972C122.838 23.2926 122.952 24.0142 123.179 24.6619C123.412 25.3097 123.761 25.8267 124.227 26.2131C124.699 26.5937 125.29 26.7841 126 26.7841ZM141.411 15.9091V18.2955H133.886V15.9091H141.411ZM135.744 12.7727H138.829V25.0625C138.829 25.4773 138.891 25.7955 139.016 26.017C139.147 26.233 139.317 26.3807 139.528 26.4602C139.738 26.5398 139.971 26.5795 140.227 26.5795C140.42 26.5795 140.596 26.5653 140.755 26.5369C140.92 26.5085 141.045 26.483 141.13 26.4602L141.65 28.8722C141.485 28.929 141.249 28.9915 140.942 29.0597C140.641 29.1278 140.272 29.1676 139.835 29.179C139.062 29.2017 138.366 29.0852 137.746 28.8295C137.127 28.5682 136.636 28.1648 136.272 27.6193C135.914 27.0739 135.738 26.392 135.744 25.5739V12.7727Z" fill="#18191C"/>
+                                            <defs>
+                                                <clipPath id="clip0_mobile_drawer_logo">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="p-1.5 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                                    >
+                                        <XMarkIcon className="w-6 h-6" />
+                                    </button>
+                                </div>
+
+                                {/* Mobile Navigation Links */}
+                                <nav className="mt-6 flex flex-col gap-2">
+                                    {navLinks.map((link, idx) => (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, x: 20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.05 * idx + 0.1, duration: 0.2 }}
+                                        >
+                                            <Link
+                                                href={link.href}
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="text-base font-medium text-[#5E6670] hover:text-[#0A65CC] px-3.5 py-2.5 rounded-lg hover:bg-gray-50 hover:translate-x-1.5 transition-all duration-200 flex items-center justify-between group"
+                                            >
+                                                <span>{link.name}</span>
+                                                <span className="text-[#0A65CC] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    &rarr;
+                                                </span>
+                                            </Link>
+                                        </motion.div>
+                                    ))}
+                                </nav>
+                            </div>
+
+                            {/* Bottom: Mobile Auth Action Buttons */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.25, duration: 0.2 }}
+                                className="pt-6 border-t border-gray-100 flex flex-col gap-3"
+                            >
+                                <Link
+                                    href={route('login')}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="w-full h-11 bg-white border border-[#CEE0F5] text-[#0A65CC] font-medium flex items-center justify-center rounded-md hover:bg-[#E7F0FA] transition-colors text-sm"
+                                >
+                                    Sign In
+                                </Link>
+                                <Link
+                                    href={route('register')}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="w-full h-11 bg-[#0A65CC] text-white font-medium flex items-center justify-center rounded-md hover:bg-[#0851A8] transition-colors text-sm"
+                                >
+                                    Register
+                                </Link>
+                            </motion.div>
+                        </motion.div>
                     </div>
-                </div>
-            </div>
+                )}
+            </AnimatePresence>
         </header>
     );
 }
