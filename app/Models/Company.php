@@ -14,7 +14,12 @@ class Company extends Model
         'name',
         'location',
         'logo',
+        'is_featured',
         'user_id',
+    ];
+
+    protected $casts = [
+        'is_featured' => 'boolean',
     ];
 
     public function user()

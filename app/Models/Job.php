@@ -25,6 +25,10 @@ class Job extends Model
         'status',
     ];
 
+    protected $casts = [
+        'is_featured' => 'boolean',
+    ];
+
     public function company()
     {
         return $this->belongsTo(Company::class);

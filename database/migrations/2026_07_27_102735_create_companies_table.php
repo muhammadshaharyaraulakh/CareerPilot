@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('location')->nullable();
             $table->string('logo')->nullable();
+            $table->boolean('is_featured')->default(false);
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });

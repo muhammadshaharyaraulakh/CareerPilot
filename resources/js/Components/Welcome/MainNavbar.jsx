@@ -93,7 +93,7 @@ export default function MainNavbar({ auth }) {
                         href={route('register')}
                         className="inline-flex items-center justify-center h-[50px] px-7 text-base font-medium text-white bg-[#0A65CC] hover:bg-[#0851A8] rounded-md transition-colors"
                     >
-                        Post A Job
+                        Register Now
                     </Link>
                 </div>
 

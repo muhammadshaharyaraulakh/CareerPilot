@@ -1,9 +1,37 @@
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     body {
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Hide scrollbar globally across all browsers */
+    html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    ::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+        width: 0;
+        height: 0;
+    }
+
+    /* Custom Selection Styling: Transparent background, text color changes to register button theme color #0A65CC */
+    ::selection {
+        background-color: transparent !important;
+        color: #0A65CC !important;
+    }
+    ::-moz-selection {
+        background-color: transparent !important;
+        color: #0A65CC !important;
     }
 }
+

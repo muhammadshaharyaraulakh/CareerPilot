@@ -22,7 +22,18 @@ class CompanyFactory extends Factory
             'name' => fake()->company(),
             'location' => fake()->city() . ', ' . fake()->country(),
             'logo' => null,
+            'is_featured' => false,
             'user_id' => User::factory()->admin(),
         ];
+    }
+
+    /**
+     * Indicate that the company is featured.
+     */
+    public function featured(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_featured' => true,
+        ]);
     }
 }

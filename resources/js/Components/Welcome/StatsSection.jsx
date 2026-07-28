@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 // Animated Counter Component
 function AnimatedCounter({ value, duration = 1800 }) {
@@ -14,7 +15,6 @@ function AnimatedCounter({ value, duration = 1800 }) {
             const elapsed = timestamp - startTime;
             const progress = Math.min(elapsed / duration, 1);
             
-            // Ease out cubic function for smooth natural deceleration
             const easeOutProgress = 1 - Math.pow(1 - progress, 3);
             const current = Math.floor(easeOutProgress * target);
 
@@ -39,6 +39,27 @@ function AnimatedCounter({ value, duration = 1800 }) {
     return <span>{count.toLocaleString('en-US')}</span>;
 }
 
+const gridContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.05
+        }
+    }
+};
+
+const cardItemVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
+    }
+};
+
 export default function StatsSection() {
     const statistics = [
         { value: '1,754', label: 'Live Job', icon: '/images/icons/icon-2.svg', highlighted: false },
@@ -50,17 +71,25 @@ export default function StatsSection() {
     return (
         <section className="w-full bg-[#f1f2f4] pt-14 sm:pt-20 lg:pt-28 pb-20 sm:pb-24 lg:pb-32 px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-[1320px]">
-                <div className="grid grid-cols-1 min-[576px]:grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+                <motion.div
+                    className="grid grid-cols-1 min-[576px]:grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6"
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: false, margin: "-40px" }}
+                    variants={gridContainerVariants}
+                >
                     {statistics.map((s, idx) => (
-                        <div
+                        <motion.div
                             key={idx}
-                            className={`group cursor-pointer rounded-2xl bg-white p-5 sm:p-6 flex items-center gap-4 sm:gap-5 transition-all duration-300 ${
+                            variants={cardItemVariants}
+                            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                            className={`group cursor-pointer rounded-2xl bg-white p-5 sm:p-6 flex items-center gap-4 sm:gap-5 transition-shadow duration-300 ${
                                 s.highlighted
-                                    ? 'shadow-[0_12px_48px_rgba(0,44,109,0.12)] ring-1 ring-black/5 -translate-y-0.5'
-                                    : 'shadow-[0_2px_14px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-0.5'
+                                    ? 'shadow-[0_12px_48px_rgba(0,44,109,0.12)] ring-1 ring-black/5'
+                                    : 'shadow-[0_2px_14px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)]'
                             }`}
                         >
-                            {/* Icon Container Box (Fixed size on all screen sizes) */}
+                            {/* Icon Container Box */}
                             <div
                                 className={`w-[68px] h-[68px] rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 ${
                                     s.highlighted
@@ -73,13 +102,11 @@ export default function StatsSection() {
                                     alt={s.label}
                                     className="h-11 w-11 object-contain"
                                     onError={(e) => {
-                                        // Show fallback icon if image isn't loaded
                                         e.target.style.display = 'none';
                                         const fallback = e.target.nextElementSibling;
                                         if (fallback) fallback.style.display = 'block';
                                     }}
                                 />
-                                {/* Fallback Icon */}
                                 <svg className="hidden h-9 w-9 fill-current" viewBox="0 0 24 24">
                                     <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
                                 </svg>
@@ -94,10 +121,11 @@ export default function StatsSection() {
                                     {s.label}
                                 </p>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );
 }
+
