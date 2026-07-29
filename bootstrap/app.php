@@ -5,6 +5,9 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
+use Symfony\Component\HttpFoundation\Response;
+use Inertia\Inertia;
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -23,4 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
+            if ($response->getStatusCode() === 404 && !$request->is('api/*')) {
+                return Inertia::render('NotFound')
+                    ->toResponse($request)
+                    ->setStatusCode(404);
+            }
+            return $response;
+        });
     })->create();

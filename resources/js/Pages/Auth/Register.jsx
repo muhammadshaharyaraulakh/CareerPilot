@@ -206,9 +206,9 @@ export default function Register() {
                                 />
                                 <label htmlFor="terms" className="ml-2.5 text-xs text-[#5E6670] cursor-pointer">
                                     I've read and agree with your{' '}
-                                    <a href="#" className="text-[#0A65CC] font-semibold no-underline hover:opacity-90">
+                                    <Link href={route('TermsOfService')} className="text-[#0A65CC] font-semibold no-underline hover:opacity-90">
                                         Terms of Services
-                                    </a>
+                                    </Link>
                                 </label>
                             </div>
 

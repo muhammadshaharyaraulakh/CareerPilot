@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
@@ -23,15 +24,26 @@ const footerColVariants = {
 };
 
 function FooterLink({ href = "#", children }) {
+    const isInternal = href && href !== '#';
     return (
         <li>
-            <a
-                href={href}
-                className="group flex items-center text-[#767E94] hover:text-white font-normal text-xs sm:text-sm transition-colors duration-200"
-            >
-                <ArrowRightIcon className="w-0 h-3.5 mr-0 opacity-0 group-hover:w-3.5 group-hover:mr-2 group-hover:opacity-100 transition-all duration-200 ease-in-out shrink-0 text-white" />
-                <span className="group-hover:translate-x-0.5 transition-transform duration-200">{children}</span>
-            </a>
+            {isInternal ? (
+                <Link
+                    href={href}
+                    className="group flex items-center text-[#767E94] hover:text-white font-normal text-xs sm:text-sm transition-colors duration-200"
+                >
+                    <ArrowRightIcon className="w-0 h-3.5 mr-0 opacity-0 group-hover:w-3.5 group-hover:mr-2 group-hover:opacity-100 transition-all duration-200 ease-in-out shrink-0 text-white" />
+                    <span className="group-hover:translate-x-0.5 transition-transform duration-200">{children}</span>
+                </Link>
+            ) : (
+                <a
+                    href={href}
+                    className="group flex items-center text-[#767E94] hover:text-white font-normal text-xs sm:text-sm transition-colors duration-200"
+                >
+                    <ArrowRightIcon className="w-0 h-3.5 mr-0 opacity-0 group-hover:w-3.5 group-hover:mr-2 group-hover:opacity-100 transition-all duration-200 ease-in-out shrink-0 text-white" />
+                    <span className="group-hover:translate-x-0.5 transition-transform duration-200">{children}</span>
+                </a>
+            )}
         </li>
     );
 }
@@ -119,9 +131,9 @@ export default function Footer() {
                     <motion.div variants={footerColVariants} className="flex flex-col">
                         <h4 className="text-white text-base font-semibold mb-4 sm:mb-5 tracking-wide">Support</h4>
                         <ul className="flex flex-col gap-3">
-                            <FooterLink href="#">Faqs</FooterLink>
+                            <FooterLink href={route('Faq')}>Faqs</FooterLink>
                             <FooterLink href="#">Privacy Policy</FooterLink>
-                            <FooterLink href="#">Terms & Conditions</FooterLink>
+                            <FooterLink href={route('TermsOfService')}>Terms & Conditions</FooterLink>
                         </ul>
                     </motion.div>
                 </motion.div>
