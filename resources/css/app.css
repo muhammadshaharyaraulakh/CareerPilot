@@ -33,5 +33,9 @@
         background-color: transparent !important;
         color: #0A65CC !important;
     }
+    /* Remove underline globally from all anchor tags */
+    a {
+        text-decoration: none !important;
+    }
 }
 
