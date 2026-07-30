@@ -39,6 +39,14 @@ Route::get('/blog/{id?}', function () {
     return Inertia::render('SingleBlog');
 })->name('SingleBlog');
 
+Route::get('/company-profile', function () {
+    return Inertia::render('CompanyProfile');
+})->name('company.profile');
+
+Route::get('/CompanyProfile', function () {
+    return Inertia::render('CompanyProfile');
+})->name('CompanyProfile');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
