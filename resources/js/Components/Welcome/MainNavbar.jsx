@@ -174,12 +174,9 @@ export default function MainNavbar({ auth }) {
                                             <Link
                                                 href={link.href}
                                                 onClick={() => setIsMobileMenuOpen(false)}
-                                                className="text-base font-medium text-[#5E6670] hover:text-[#0A65CC] px-3.5 py-2.5 rounded-lg hover:bg-gray-50 hover:translate-x-1.5 transition-all duration-200 flex items-center justify-between group"
+                                                className="text-base font-normal text-[#5E6670] hover:text-[#0A65CC] py-2.5 transition-colors block"
                                             >
-                                                <span>{link.name}</span>
-                                                <span className="text-[#0A65CC] opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    &rarr;
-                                                </span>
+                                                {link.name}
                                             </Link>
                                         </motion.div>
                                     ))}

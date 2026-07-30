@@ -98,8 +98,8 @@ export default function Footer() {
                     <motion.div variants={footerColVariants} className="flex flex-col">
                         <h4 className="text-white text-base font-semibold mb-4 sm:mb-5 tracking-wide">Quick Link</h4>
                         <ul className="flex flex-col gap-3">
-                            <FooterLink href="#">About</FooterLink>
-                            <FooterLink href="#">Contact</FooterLink>
+                            <FooterLink href={route('About')}>About</FooterLink>
+                            <FooterLink href={route('Contact')}>Contact</FooterLink>
                             <FooterLink href="#">Pricing</FooterLink>
                             <FooterLink href="#">Blog</FooterLink>
                         </ul>

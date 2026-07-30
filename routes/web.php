@@ -19,6 +19,26 @@ Route::get('/Faq', function () {
     return Inertia::render('Faq');
 })->name('Faq');
 
+Route::get('/Contact', function () {
+    return Inertia::render('Contact');
+})->name('Contact');
+
+Route::get('/About', function () {
+    return Inertia::render('About');
+})->name('About');
+
+Route::get('/blogs', function () {
+    return Inertia::render('AllBlogs');
+})->name('blogs');
+
+Route::get('/AllBlogs', function () {
+    return Inertia::render('AllBlogs');
+})->name('AllBlogs');
+
+Route::get('/blog/{id?}', function () {
+    return Inertia::render('SingleBlog');
+})->name('SingleBlog');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -32,6 +52,10 @@ Route::middleware('auth')->group(function () {
 Route::get('/404', function () {
     return Inertia::render('NotFound');
 })->name('NotFound');
+
+Route::get('/403', function () {
+    return Inertia::render('Forbidden');
+})->name('Forbidden');
 
 Route::fallback(function () {
     return Inertia::render('NotFound');

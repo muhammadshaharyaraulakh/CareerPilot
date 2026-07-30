@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
-import TopHeader from "@/Components/Welcome/TopHeader";
 import MainNavbar from "@/Components/Welcome/MainNavbar";
 import Footer from "@/Components/Welcome/Footer";
 
-export default function NotFound({ auth }) {
-    const [imgSrc, setImgSrc] = useState("/images/banners/404.png");
+export default function Forbidden({ auth }) {
+    const [imgSrc, setImgSrc] = useState("/images/banners/403.png");
 
     const handleGoBack = () => {
         if (window.history.length > 1) {
@@ -50,13 +49,13 @@ export default function NotFound({ auth }) {
 
     return (
         <>
-            <Head title="404 Page Not Found " />
+            <Head title="403 Access Denied - CareerPilot" />
 
             <div className="min-h-screen w-screen max-w-full overflow-x-hidden bg-white text-[#18191C] font-sans flex flex-col justify-between antialiased selection:bg-[#0A65CC]/10 selection:text-[#0A65CC]">
-                {/* 2. Main Navigation Bar */}
+                {/* 1. Main Navigation Bar */}
                 <MainNavbar auth={auth} />
 
-                {/* 3. Main Hero Section */}
+                {/* 2. Main Hero Section */}
                 <main className="flex-1 max-w-[1320px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-24 flex items-center justify-center">
                     <motion.div
                         variants={containerVariants}
@@ -66,19 +65,32 @@ export default function NotFound({ auth }) {
                     >
                         {/* Left Column: Heading, Message & Buttons */}
                         <div className="lg:col-span-6 xl:col-span-5 flex flex-col items-start text-left">
+                            <motion.span
+                                variants={fadeInUp}
+                                className="text-xs sm:text-sm font-semibold text-[#E05151] tracking-wide uppercase mb-2"
+                            >
+                                Error 403
+                            </motion.span>
+
                             <motion.h1
                                 variants={fadeInUp}
                                 className="text-3xl min-[360px]:text-4xl sm:text-5xl lg:text-[56px] font-bold text-[#18191C] tracking-tight leading-[1.15] mb-4 sm:mb-6"
                             >
-                                Opps! Page not found
+                                Oops! Access Denied
                             </motion.h1>
+
+                            <motion.p
+                                variants={fadeInUp}
+                                className="text-xs min-[360px]:text-sm sm:text-base text-[#5E6670] leading-relaxed mb-4 max-w-md"
+                            >
+                                You do not have the required permissions to view this resource. Access to this page is restricted to authorized accounts or requires a different account level.
+                            </motion.p>
 
                             <motion.p
                                 variants={fadeInUp}
                                 className="text-xs min-[360px]:text-sm sm:text-base text-[#5E6670] leading-relaxed mb-6 sm:mb-8 max-w-md"
                             >
-                                Something went wrong. It's look like the link is
-                                broken or the page is removed.
+                                Please verify your account credentials or return to the homepage to explore candidate and employer services.
                             </motion.p>
 
                             {/* Action Buttons */}
@@ -104,7 +116,7 @@ export default function NotFound({ auth }) {
                             </motion.div>
                         </div>
 
-                        {/* Right Column: 404 Illustration / Image */}
+                        {/* Right Column: 403 Illustration / Image */}
                         <div className="lg:col-span-6 xl:col-span-7 flex justify-center lg:justify-end">
                             <motion.div
                                 variants={fadeInRight}
@@ -113,13 +125,11 @@ export default function NotFound({ auth }) {
                                 <motion.img
                                     src={imgSrc}
                                     onError={() => {
-                                        {
-                                            setImgSrc(
-                                                "/images/banners/illustration.svg"
-                                            );
-                                        }
+                                        setImgSrc(
+                                            "/images/banners/illustration.svg"
+                                        );
                                     }}
-                                    alt="404 Page Not Found"
+                                    alt="403 Access Denied"
                                     animate={{ y: [0, -8, 0] }}
                                     transition={{
                                         duration: 4,
@@ -133,7 +143,7 @@ export default function NotFound({ auth }) {
                     </motion.div>
                 </main>
 
-                {/* 4. Footer Component */}
+                {/* 3. Footer Component */}
                 <Footer />
             </div>
         </>
