@@ -47,9 +47,17 @@ Route::get('/CompanyProfile', function () {
     return Inertia::render('CompanyProfile');
 })->name('CompanyProfile');
 
+Route::get('/CompanyDashboard', function () {
+    return Inertia::render('CompanyDashboard');
+})->name('CompanyDashboard');
+
+Route::get('/company-dashboard', function () {
+    return Inertia::render('CompanyDashboard');
+})->name('company.dashboard');
+
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    return Inertia::render('CompanyDashboard');
+})->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

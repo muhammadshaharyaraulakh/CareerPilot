@@ -2,48 +2,37 @@ import React from 'react';
 import { Link } from '@inertiajs/react';
 import { PhoneIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
-export default function TopHeader() {
+export default function TopHeader({ activeLink = 'Home' }) {
+    const navItems = [
+        { name: 'Home', href: '/' },
+        { name: 'Find Job', href: '#' },
+        { name: 'Employers', href: '/dashboard' },
+        { name: 'Candidates', href: '#' },
+        { name: 'Pricing Plans', href: '#' },
+        { name: 'Customer Supports', href: '/Contact' },
+    ];
+
     return (
         <div className="hidden min-[576px]:block w-full bg-[#F1F2F4] border-b border-gray-200/80 text-xs sm:text-sm text-[#5E6670] px-4 sm:px-6 lg:px-8 transition-colors duration-150">
             <div className="max-w-[1320px] mx-auto">
                 <div className="flex items-center justify-between h-[44px]">
                     <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 overflow-x-auto w-full min-[950px]:w-auto no-scrollbar h-full justify-between min-[950px]:justify-start">
-                        <Link 
-                            href="#" 
-                            className=" text-[#0A65CC] flex items-center h-full relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#0A65CC] shrink-0"
-                        >
-                            Home
-                        </Link>
-                        <Link 
-                            href="#" 
-                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
-                        >
-                            Find Job
-                        </Link>
-                        <Link 
-                            href="#" 
-                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
-                        >
-                            Employers
-                        </Link>
-                        <Link 
-                            href="#" 
-                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
-                        >
-                            Candidates
-                        </Link>
-                        <Link 
-                            href="#" 
-                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
-                        >
-                            Pricing Plans
-                        </Link>
-                        <Link 
-                            href="#" 
-                            className=" hover:text-[#0A65CC] flex items-center h-full relative hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC] transition-colors duration-200 shrink-0"
-                        >
-                            Customer Supports
-                        </Link>
+                        {navItems.map((item) => {
+                            const isActive = activeLink.toLowerCase() === item.name.toLowerCase();
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className={`flex items-center h-full relative transition-colors duration-200 shrink-0 ${
+                                        isActive
+                                            ? "text-[#0A65CC] font-medium after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[3px] after:bg-[#0A65CC]"
+                                            : "hover:text-[#0A65CC] hover:after:content-[''] hover:after:absolute hover:after:bottom-0 hover:after:left-0 hover:after:w-full hover:after:h-[3px] hover:after:bg-[#0A65CC]"
+                                    }`}
+                                >
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
                     </nav>
 
                     <div className="hidden min-[950px]:flex items-center gap-4 sm:gap-6 text-xs text-[#18191C] font-medium shrink-0">
