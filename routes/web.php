@@ -59,6 +59,15 @@ Route::get('/dashboard', function () {
     return Inertia::render('CompanyDashboard');
 })->name('dashboard');
 
+Route::get('/CandidateDashboard', function () {
+    return Inertia::render('CandidateDashboard');
+})->name('CandidateDashboard');
+
+Route::get('/candidate-dashboard', function () {
+    return Inertia::render('CandidateDashboard');
+})->name('candidate.dashboard');
+
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
