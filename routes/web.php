@@ -99,6 +99,14 @@ Route::get('/candidate-dashboard', function () {
     return Inertia::render('CandidateDashboard');
 })->name('candidate.dashboard');
 
+Route::get('/AdminDashboard', function () {
+    return Inertia::render('AdminDashboard');
+})->name('AdminDashboard');
+
+Route::get('/admin-dashboard', function () {
+    return Inertia::render('AdminDashboard');
+})->name('admin.dashboard');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
