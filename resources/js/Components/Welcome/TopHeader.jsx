@@ -5,10 +5,10 @@ import { PhoneIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 export default function TopHeader({ activeLink = 'Home' }) {
     const navItems = [
         { name: 'Home', href: '/' },
-        { name: 'Find Job', href: '#' },
-        { name: 'Employers', href: '/dashboard' },
-        { name: 'Candidates', href: '#' },
-        { name: 'Pricing Plans', href: '#' },
+        { name: 'Find Job', href: '/find-job' },
+        { name: 'Employers', href: '/find-employers' },
+        { name: 'Candidates', href: '/CandidateDashboard' },
+        { name: 'Pricing Plans', href: '/ComingSoon' },
         { name: 'Customer Supports', href: '/Contact' },
     ];
 

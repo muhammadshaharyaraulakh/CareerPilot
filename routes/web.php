@@ -23,6 +23,38 @@ Route::get('/Contact', function () {
     return Inertia::render('Contact');
 })->name('Contact');
 
+Route::get('/find-job', function () {
+    return Inertia::render('FindJob');
+})->name('find.job');
+
+Route::get('/FindJob', function () {
+    return Inertia::render('FindJob');
+})->name('FindJob');
+
+Route::get('/job-details/{id?}', function () {
+    return Inertia::render('JobDetails');
+})->name('job.details');
+
+Route::get('/JobDetails', function () {
+    return Inertia::render('JobDetails');
+})->name('JobDetails');
+
+Route::get('/find-employers', function () {
+    return Inertia::render('FindEmployers');
+})->name('find.employers');
+
+Route::get('/FindEmployers', function () {
+    return Inertia::render('FindEmployers');
+})->name('FindEmployers');
+
+Route::get('/company-details/{id?}', function () {
+    return Inertia::render('CompanyDetails');
+})->name('company.details');
+
+Route::get('/CompanyDetails', function () {
+    return Inertia::render('CompanyDetails');
+})->name('CompanyDetails');
+
 Route::get('/About', function () {
     return Inertia::render('About');
 })->name('About');
