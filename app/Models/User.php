@@ -65,4 +65,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Category::class);
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isCompany(): bool
+    {
+        return in_array($this->role, ['employee', 'company']);
+    }
+
+    public function isCandidate(): bool
+    {
+        return in_array($this->role, ['user', 'candidate']);
+    }
 }
