@@ -34,6 +34,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             CompanySeeder::class,
             JobSeeder::class,
+            BlogCategorySeeder::class,
+            BlogSeeder::class,
+            BlogCommentSeeder::class,
         ]);
     }
 }
