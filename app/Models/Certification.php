@@ -7,8 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Certification extends Model
 {
-    /** @use HasFactory<\Database\Factories\CertificationFactory> */
     use HasFactory;
+
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'issue_date' => 'date',
+        'expiration_date' => 'date',
+    ];
 
     public function user()
     {

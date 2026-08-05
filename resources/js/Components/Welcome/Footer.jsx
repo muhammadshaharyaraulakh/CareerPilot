@@ -98,10 +98,9 @@ export default function Footer() {
                     <motion.div variants={footerColVariants} className="flex flex-col">
                         <h4 className="text-white text-base font-semibold mb-4 sm:mb-5 tracking-wide">Quick Link</h4>
                         <ul className="flex flex-col gap-3">
-                            <FooterLink href={route('About')}>About</FooterLink>
-                            <FooterLink href={route('Contact')}>Contact</FooterLink>
-                            <FooterLink href="#">Pricing</FooterLink>
-                            <FooterLink href="#">Blog</FooterLink>
+                            <FooterLink href="/About">About</FooterLink>
+                            <FooterLink href="/Contact">Contact</FooterLink>
+                            <FooterLink href="/AllBlogs">Blog</FooterLink>
                         </ul>
                     </motion.div>
 
@@ -109,10 +108,9 @@ export default function Footer() {
                     <motion.div variants={footerColVariants} className="flex flex-col">
                         <h4 className="text-white text-base font-semibold mb-4 sm:mb-5 tracking-wide">Candidate</h4>
                         <ul className="flex flex-col gap-3">
-                            <FooterLink href="#">Browse Jobs</FooterLink>
-                            <FooterLink href="#">Browse Employers</FooterLink>
-                            <FooterLink href="#">Candidate Dashboard</FooterLink>
-                            <FooterLink href="#">Saved Jobs</FooterLink>
+                            <FooterLink href="/FindJob">Browse Jobs</FooterLink>
+                            <FooterLink href="/FindEmployers">Browse Employers</FooterLink>
+                            <FooterLink href="/CandidateDashboard">Candidate Dashboard</FooterLink>
                         </ul>
                     </motion.div>
 
@@ -120,10 +118,9 @@ export default function Footer() {
                     <motion.div variants={footerColVariants} className="flex flex-col">
                         <h4 className="text-white text-base font-semibold mb-4 sm:mb-5 tracking-wide">Employers</h4>
                         <ul className="flex flex-col gap-3">
-                            <FooterLink href="#">Post a Job</FooterLink>
-                            <FooterLink href="#">Browse Candidates</FooterLink>
-                            <FooterLink href="#">Employers Dashboard</FooterLink>
-                            <FooterLink href="#">Applications</FooterLink>
+                            <FooterLink href="/FindJob">Post a Job</FooterLink>
+                            <FooterLink href="/FindEmployers">Browse Candidates</FooterLink>
+                            <FooterLink href="/CompanyDashboard">Employers Dashboard</FooterLink>
                         </ul>
                     </motion.div>
 
@@ -131,11 +128,11 @@ export default function Footer() {
                     <motion.div variants={footerColVariants} className="flex flex-col">
                         <h4 className="text-white text-base font-semibold mb-4 sm:mb-5 tracking-wide">Support</h4>
                         <ul className="flex flex-col gap-3">
-                            <FooterLink href={route('Faq')}>Faqs</FooterLink>
-                            <FooterLink href="#">Privacy Policy</FooterLink>
-                            <FooterLink href={route('TermsOfService')}>Terms & Conditions</FooterLink>
+                            <FooterLink href="/Faq">Faqs</FooterLink>
+                            <FooterLink href="/TermsOfService">Terms & Conditions</FooterLink>
                         </ul>
                     </motion.div>
+
                 </motion.div>
 
                 {/* Bottom Bar */}

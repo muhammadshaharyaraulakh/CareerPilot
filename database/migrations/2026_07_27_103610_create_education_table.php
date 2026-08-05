@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('education', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('level')->nullable();
+            $table->string('degree');
+            $table->string('institution');
+            $table->string('field_of_study')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->boolean('is_current')->default(false);
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

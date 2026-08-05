@@ -5,15 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Company extends Model
+class JobAlert extends Model
 {
     use HasFactory;
 
     protected $guarded = ['id'];
 
     protected $casts = [
-        'is_featured' => 'boolean',
-        'is_approved' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function user()
@@ -21,13 +20,8 @@ class Company extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function jobs()
+    public function category()
     {
-        return $this->hasMany(Job::class);
-    }
-
-    public function blogs()
-    {
-        return $this->hasMany(Blog::class);
+        return $this->belongsTo(Category::class);
     }
 }

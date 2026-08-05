@@ -9,13 +9,14 @@ export default function MainNavbar({ auth }) {
     const country = 'Pakistan';
 
     const navLinks = [
-        { name: 'Home', href: '#' },
-        { name: 'Find Job', href: '#' },
-        { name: 'Employers', href: '#' },
-        { name: 'Candidates', href: '#' },
-        { name: 'Pricing Plans', href: '#' },
-        { name: 'Customer Supports', href: '#' },
+        { name: 'Home', href: '/' },
+        { name: 'Find Job', href: '/FindJob' },
+        { name: 'Employers', href: '/FindEmployers' },
+        { name: 'Candidates', href: '/CandidateDashboard' },
+        { name: 'Blogs', href: '/AllBlogs' },
+        { name: 'Customer Support', href: '/Contact' },
     ];
+
 
     return (
         <header className="w-full bg-white border-b border-gray-200/80 py-3 px-4 sm:px-6 lg:px-8 relative z-40">

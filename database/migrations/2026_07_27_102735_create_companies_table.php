@@ -13,11 +13,25 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('location')->nullable();
-            $table->string('logo')->nullable();
-            $table->boolean('is_featured')->default(false);
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('name');
+            $table->string('slug')->nullable();
+            $table->string('logo')->nullable();
+            $table->string('banner')->nullable();
+            $table->string('tagline')->nullable();
+            $table->text('about')->nullable();
+            $table->text('vision')->nullable();
+            $table->string('industry')->nullable();
+            $table->string('organization_type')->nullable();
+            $table->string('company_size')->nullable();
+            $table->string('founded_in')->nullable();
+            $table->string('website')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable();
+            $table->string('location')->nullable();
+            $table->boolean('is_featured')->default(false);
+            $table->boolean('is_approved')->default(true);
+            $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('approved');
             $table->timestamps();
         });
     }

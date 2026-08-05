@@ -7,8 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Experience extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExperienceFactory> */
     use HasFactory;
+
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_current' => 'boolean',
+    ];
 
     public function user()
     {

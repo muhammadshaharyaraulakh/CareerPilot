@@ -13,7 +13,11 @@ return new class extends Migration {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->foreignId('created_by')->constrained('users');
+            $table->string('slug')->nullable();
+            $table->string('icon')->nullable();
+            $table->text('description')->nullable();
+            $table->boolean('is_featured')->default(false);
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

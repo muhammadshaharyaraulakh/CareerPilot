@@ -7,8 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserProfile extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserProfileFactory> */
     use HasFactory;
+
+    protected $guarded = ['id'];
+
+    protected $casts = [
+        'date_of_birth' => 'date',
+        'is_public' => 'boolean',
+    ];
 
     public function user()
     {

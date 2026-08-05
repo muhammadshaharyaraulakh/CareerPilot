@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Skill extends Model
 {
-    /** @use HasFactory<\Database\Factories\SkillFactory> */
     use HasFactory;
+
+    protected $guarded = ['id'];
+
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->withPivot('proficiency_level')->withTimestamps();
     }
 }
