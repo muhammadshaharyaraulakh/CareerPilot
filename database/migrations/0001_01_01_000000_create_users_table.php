@@ -19,6 +19,10 @@ return new class extends Migration {
             $table->enum('role', ['admin', 'company', 'candidate'])->default('candidate');
             $table->string('provider')->nullable();
             $table->string('provider_id')->nullable();
+            $table->boolean('is_profile_public')->default(true);
+            $table->boolean('is_cv_public')->default(true);
+            $table->boolean('job_alerts')->default(true);
+            $table->boolean('email_notifications')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });

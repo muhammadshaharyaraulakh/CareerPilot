@@ -13,8 +13,6 @@ import {
 export default function AccountSettingsTab() {
     // Account settings state
     const [accountData, setAccountData] = useState({
-        email: "candidate@example.com",
-        phone: "+92 300 1234567",
         isPublic: true,
         isCvPublic: true,
         emailNotifications: true,
@@ -74,40 +72,8 @@ export default function AccountSettingsTab() {
                             Contact Credentials & Visibility
                         </h3>
                         <p className="text-xs text-[#767E94]">
-                            Manage your account primary email, phone number, and candidate profile visibility
+                            Manage your candidate profile visibility and preferences
                         </p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                            Account Email Address
-                        </label>
-                        <input
-                            type="email"
-                            value={accountData.email}
-                            onChange={(e) =>
-                                setAccountData({ ...accountData, email: e.target.value })
-                            }
-                            placeholder="Email address"
-                            className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                            Phone Number
-                        </label>
-                        <input
-                            type="tel"
-                            value={accountData.phone}
-                            onChange={(e) =>
-                                setAccountData({ ...accountData, phone: e.target.value })
-                            }
-                            placeholder="Phone number"
-                            className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
-                        />
                     </div>
                 </div>
 
