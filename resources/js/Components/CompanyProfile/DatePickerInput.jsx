@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 
-export default function DatePickerInput({ value, onChange, id, name, placeholder = "Select date" }) {
+export default function DatePickerInput({ value, onChange, id, name, placeholder = "Select date", disabled = false, roundedNone = true, alignRight = false }) {
     const [isOpen, setIsOpen] = useState(false);
 
     // Parse initial date
@@ -87,6 +87,7 @@ export default function DatePickerInput({ value, onChange, id, name, placeholder
 
     const handleClear = (e) => {
         e.stopPropagation();
+        if (disabled) return;
         setSelectedDate(null);
         if (onChange) {
             onChange({ target: { name, value: "" } });
@@ -118,19 +119,23 @@ export default function DatePickerInput({ value, onChange, id, name, placeholder
         <div ref={containerRef} className="relative w-full">
             {/* Input Trigger */}
             <div
-                onClick={() => setIsOpen(!isOpen)}
-                className={`w-full h-12 px-4 bg-white border rounded-md flex items-center justify-between cursor-pointer transition-all ${
-                    isOpen
-                        ? "border-[#0A65CC] ring-1 ring-[#0A65CC]"
-                        : "border-[#E4E5E8] hover:border-[#B0B7C3]"
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                className={`w-full h-12 px-4 border flex items-center justify-between transition-all ${
+                    roundedNone ? "rounded-none" : "rounded-md"
+                } ${
+                    disabled
+                        ? "bg-[#F1F2F4] border-[#E4E5E8] cursor-not-allowed text-[#9199A3]"
+                        : isOpen
+                        ? "bg-white border-[#0A65CC] ring-1 ring-[#0A65CC] cursor-pointer"
+                        : "bg-white border-[#E4E5E8] hover:border-[#B0B7C3] cursor-pointer"
                 }`}
             >
-                <span className={`text-xs sm:text-sm ${selectedDate ? "text-[#18191C] font-medium" : "text-[#9199A3]"}`}>
+                <span className={`text-xs sm:text-sm ${selectedDate ? (disabled ? "text-[#9199A3]" : "text-[#18191C] font-medium") : "text-[#9199A8]"}`}>
                     {selectedDate ? formatDateDisplay(selectedDate) : placeholder}
                 </span>
 
                 <div className="flex items-center gap-2">
-                    {selectedDate && (
+                    {selectedDate && !disabled && (
                         <button
                             type="button"
                             onClick={handleClear}
@@ -140,13 +145,15 @@ export default function DatePickerInput({ value, onChange, id, name, placeholder
                             <X className="w-3.5 h-3.5" />
                         </button>
                     )}
-                    <Calendar className="w-4 h-4 text-[#0A65CC]" />
+                    <Calendar className={`w-4 h-4 ${disabled ? "text-[#9199A3]" : "text-[#0A65CC]"}`} />
                 </div>
             </div>
 
             {/* Custom Modern Popover */}
             {isOpen && (
-                <div className="absolute left-0 mt-2 z-50 w-72 sm:w-80 bg-white border border-[#E4E5E8] rounded-xl shadow-xl p-4 animate-fadeIn">
+                <div className={`absolute mt-2 z-50 w-[calc(100vw-3.5rem)] sm:w-80 max-w-[320px] bg-white border border-[#E4E5E8] rounded-xl shadow-2xl p-4 animate-fadeIn ${
+                    alignRight ? "right-0 left-auto" : "left-0"
+                }`}>
                     {/* Header: Month & Year Selectors */}
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F2F4]">
                         <div className="flex items-center gap-1.5">

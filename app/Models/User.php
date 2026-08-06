@@ -29,38 +29,47 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     public function company()
     {
         return $this->hasOne(Company::class);
     }
+
     public function education()
     {
         return $this->hasMany(Education::class);
     }
+
     public function experience()
     {
         return $this->hasMany(Experience::class);
     }
+
     public function certifications()
     {
         return $this->hasMany(Certification::class);
     }
+
     public function skills()
     {
         return $this->belongsToMany(Skill::class);
     }
+
     public function projects()
     {
         return $this->hasMany(Project::class);
     }
+
     public function profile()
     {
         return $this->hasOne(UserProfile::class);
     }
+
     public function applications()
     {
         return $this->hasMany(Application::class);
     }
+
     public function categories()
     {
         return $this->hasMany(Category::class);
@@ -79,6 +88,11 @@ class User extends Authenticatable
     public function isCandidate(): bool
     {
         return $this->role === 'candidate';
+    }
+
+    public function socialLinks()
+    {
+        return $this->hasMany(SocialLink::class);
     }
 
     public function getDashboardRoute(): string

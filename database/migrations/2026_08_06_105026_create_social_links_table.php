@@ -10,13 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('certifications', function (Blueprint $table) {
+        Schema::create('social_links', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('title');
-            $table->string('issuing_organization');
-            $table->date('issue_date')->nullable();
-            $table->string('certification_image')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('provider');  // e.g., linkedin, github, twitter, facebook, instagram, portfolio
+            $table->string('url');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('certifications');
+        Schema::dropIfExists('social_links');
     }
 };
