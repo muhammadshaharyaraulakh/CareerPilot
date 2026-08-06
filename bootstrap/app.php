@@ -32,10 +32,18 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $exceptions->respond(function (Response $response, \Throwable $exception, Request $request) {
-            if ($response->getStatusCode() === 404 && !$request->is('api/*')) {
-                return Inertia::render('NotFound')
-                    ->toResponse($request)
-                    ->setStatusCode(404);
+            if (!$request->is('api/*')) {
+                if ($response->getStatusCode() === 404) {
+                    return Inertia::render('NotFound')
+                        ->toResponse($request)
+                        ->setStatusCode(404);
+                }
+
+                if ($response->getStatusCode() === 403) {
+                    return Inertia::render('Forbidden')
+                        ->toResponse($request)
+                        ->setStatusCode(403);
+                }
             }
             return $response;
         });

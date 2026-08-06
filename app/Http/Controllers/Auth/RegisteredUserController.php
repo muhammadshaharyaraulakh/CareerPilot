@@ -32,14 +32,39 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => 'nullable|string|in:candidate,employer,user,employee',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                'unique:' . User::class,
+            ],
+            'password' => [
+                'required',
+                'confirmed',
+                'min:12',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*?&]/',
+            ],
+            'role' => [
+                'nullable',
+                'string',
+                'in:candidate,company',
+            ],
         ]);
-
-        $role = $request->role === 'employer' ? 'employee' : ($request->role ?? 'user');
-
+        if ($request->role === 'company') {
+            $role = 'company';
+        } else {
+            $role = 'candidate';
+        }
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -51,6 +76,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route($user->getDashboardRoute(), absolute: false));
     }
 }

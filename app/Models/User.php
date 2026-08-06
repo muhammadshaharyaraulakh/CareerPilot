@@ -73,11 +73,24 @@ class User extends Authenticatable
 
     public function isCompany(): bool
     {
-        return in_array($this->role, ['employee', 'company']);
+        return $this->role === 'company';
     }
 
     public function isCandidate(): bool
     {
-        return in_array($this->role, ['user', 'candidate']);
+        return $this->role === 'candidate';
+    }
+
+    public function getDashboardRoute(): string
+    {
+        if ($this->isAdmin()) {
+            return 'AdminDashboard';
+        }
+
+        if ($this->isCompany()) {
+            return 'CompanyDashboard';
+        }
+
+        return 'CandidateDashboard';
     }
 }
