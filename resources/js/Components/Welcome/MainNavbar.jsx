@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { MagnifyingGlassIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { ChevronDown, LogOut, LayoutDashboard } from 'lucide-react';
+import { LogOut, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import UserProfileDropdown from '@/Components/UserProfileDropdown';
 
 export default function MainNavbar({ auth }) {
     const pageProps = usePage().props;
@@ -10,62 +11,14 @@ export default function MainNavbar({ auth }) {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
     const country = 'Pakistan';
 
-    const [avatarUrl, setAvatarUrl] = useState(() => {
-        if (currentUser?.profile_picture) return currentUser.profile_picture;
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'User')}&background=0A65CC&color=fff`;
-    });
-
     const getDashboardRoute = (role) => {
-        if (role === 'admin') return 'AdminDashboard';
-        if (role === 'company' || role === 'employee') return 'CompanyDashboard';
+        const lowerRole = (role || '').toLowerCase();
+        if (lowerRole === 'admin') return 'AdminDashboard';
+        if (lowerRole === 'company' || lowerRole === 'employee') return 'CompanyDashboard';
         return 'CandidateDashboard';
     };
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (currentUser) {
-            fetch('/candidate/personal-profile/avatar')
-                .then((res) => res.json())
-                .then((json) => {
-                    if (json.success && json.data && json.data.profile_picture) {
-                        setAvatarUrl(json.data.profile_picture);
-                    }
-                })
-                .catch(() => {});
-
-            const handleAvatarUpdate = (e) => {
-                if (e.detail && e.detail.profile_picture !== undefined) {
-                    if (e.detail.profile_picture) {
-                        setAvatarUrl(e.detail.profile_picture);
-                    } else {
-                        setAvatarUrl(
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'User')}&background=0A65CC&color=fff`
-                        );
-                    }
-                }
-            };
-
-            window.addEventListener('profile-picture-updated', handleAvatarUpdate);
-            return () => {
-                window.removeEventListener('profile-picture-updated', handleAvatarUpdate);
-            };
-        }
-    }, [currentUser]);
 
     const navLinks = [
         { name: 'Home', href: '/' },
@@ -97,8 +50,8 @@ export default function MainNavbar({ auth }) {
                         </svg>
                     </Link>
 
-                    <div className="hidden min-[920px]:flex items-center flex-1 max-w-[668px] h-[50px] border border-[#E4E5E8] rounded-md bg-white px-3 focus-within:border-[#0A65CC] focus-within:ring-1 focus-within:ring-[#0A65CC] transition-all">
-                        <div className="flex items-center gap-2 shrink-0 pr-3 border-r border-[#E4E5E8]">
+                    <div className="hidden min-[920px]:flex items-center flex-1 max-w-[668px] h-[54px] border border-[#E4E5E8] rounded-none bg-white px-3.5 focus-within:border-[#0A65CC] focus-within:ring-1 focus-within:ring-[#0A65CC] transition-all">
+                        <div className="flex items-center gap-2 shrink-0 pr-3.5 border-r border-[#E4E5E8] h-full">
                             <span className="w-6 h-4 rounded-[2px] overflow-hidden shrink-0 shadow-xs border border-gray-100 flex items-center justify-center bg-white relative">
                                 <img
                                     src="/images/flags/pk.svg"
@@ -128,14 +81,14 @@ export default function MainNavbar({ auth }) {
                             <span className="text-sm font-normal text-[#18191C]">{country}</span>
                         </div>
 
-                        <div className="flex items-center flex-1 pl-3 bg-white h-full">
+                        <div className="flex items-center flex-1 pl-3.5 bg-white h-full">
                             <MagnifyingGlassIcon className="w-5 h-5 text-[#0A65CC] mr-2.5 shrink-0" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Job title, keyword, company"
-                                className="w-full text-sm text-[#18191C] placeholder-[#9199A3] border-none outline-none focus:ring-0 p-0 bg-transparent"
+                                className="w-full h-full text-sm text-[#18191C] placeholder-[#9199A3] border-none outline-none focus:outline-none focus:ring-0 focus:border-none shadow-none p-0 bg-transparent"
                             />
                         </div>
                     </div>
@@ -143,74 +96,7 @@ export default function MainNavbar({ auth }) {
 
                 <div className="flex items-center gap-3 shrink-0">
                     {currentUser ? (
-                        <div className="relative" ref={dropdownRef}>
-                            <button
-                                type="button"
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="flex items-center gap-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors focus:outline-none cursor-pointer"
-                            >
-                                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
-                                    <img
-                                        src={avatarUrl}
-                                        alt={currentUser.name}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=0A65CC&color=fff`;
-                                        }}
-                                    />
-                                </div>
-                                <div className="hidden sm:flex flex-col text-left">
-                                    <span className="text-sm font-semibold text-[#18191C] leading-tight truncate max-w-[120px]">
-                                        {currentUser.name}
-                                    </span>
-                                    <span className="text-xs text-[#767E94] capitalize">
-                                        {currentUser.role || 'User'}
-                                    </span>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 text-[#767E94] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            <AnimatePresence>
-                                {isDropdownOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                        transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 py-1.5 z-50 overflow-hidden font-sans"
-                                    >
-                                        <div className="px-4 py-3 border-b border-gray-100">
-                                            <p className="text-sm font-semibold text-gray-900 truncate">{currentUser.name}</p>
-                                            <p className="text-xs text-gray-500 truncate">{currentUser.email}</p>
-                                        </div>
-
-                                        <div className="py-1">
-                                            <Link
-                                                href={route(getDashboardRoute(currentUser.role))}
-                                                onClick={() => setIsDropdownOpen(false)}
-                                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                                            >
-                                                <LayoutDashboard className="w-4 h-4 text-[#0A65CC]" />
-                                                Dashboard
-                                            </Link>
-                                        </div>
-
-                                        <div className="border-t border-gray-100 pt-1">
-                                            <Link
-                                                href={route('logout')}
-                                                method="post"
-                                                as="button"
-                                                onClick={() => setIsDropdownOpen(false)}
-                                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left cursor-pointer"
-                                            >
-                                                <LogOut className="w-4 h-4 text-red-600" />
-                                                Log Out
-                                            </Link>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                        <UserProfileDropdown auth={auth} />
                     ) : (
                         <div className="hidden min-[576px]:flex items-center gap-3 shrink-0">
                             <Link
@@ -311,12 +197,9 @@ export default function MainNavbar({ auth }) {
                                     <div className="flex items-center gap-3 px-1 py-2">
                                         <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
                                             <img
-                                                src={avatarUrl}
+                                                src={currentUser?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=0A65CC&color=fff`}
                                                 alt={currentUser.name}
                                                 className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=0A65CC&color=fff`;
-                                                }}
                                             />
                                         </div>
                                         <div className="flex flex-col overflow-hidden">
@@ -362,7 +245,7 @@ export default function MainNavbar({ auth }) {
                                     <Link
                                         href={route('register')}
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className="w-full h-11 bg-[#0A65CC] text-white font-medium flex items-center justify-center rounded-md hover:bg-[#0851A8] transition-colors text-sm"
+                                        className="w-full h-11 bg-[#0A65CC] text-[#ffffff] font-medium flex items-center justify-center rounded-md hover:bg-[#0851A8] transition-colors text-sm"
                                     >
                                         Register Now
                                     </Link>

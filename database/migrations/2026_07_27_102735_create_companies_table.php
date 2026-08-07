@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,17 +14,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('name');
-            $table->string('slug')->nullable();
             $table->string('logo')->nullable();
             $table->string('banner')->nullable();
-            $table->string('tagline')->nullable();
             $table->text('about')->nullable();
-            $table->text('vision')->nullable();
-            $table->string('industry')->nullable();
             $table->string('organization_type')->nullable();
-            $table->string('company_size')->nullable();
-            $table->string('founded_in')->nullable();
+            $table->string('industry_type')->nullable();
+            $table->string('team_size')->nullable();
+            $table->string('founded_year')->nullable();
             $table->string('website')->nullable();
+            $table->text('vision')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->string('location')->nullable();
