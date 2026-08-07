@@ -27,10 +27,11 @@ export default function SocialLinksTab() {
         "Twitter / X",
         "Facebook",
         "YouTube",
+        "Instagram",
         "Dribbble",
         "Behance",
         "Stack Overflow",
-        "Personal Website",
+        "Portfolio Website",
         "Other",
     ];
 
@@ -53,7 +54,13 @@ export default function SocialLinksTab() {
             });
             const json = await res.json();
             if (json.success && Array.isArray(json.data)) {
-                setSocialLinks(json.data);
+                // Normalize data structure
+                const normalized = json.data.map((item) => ({
+                    id: item.id,
+                    provider: item.provider || item.platform_name || "LinkedIn",
+                    url: item.url || item.profile_url || "",
+                }));
+                setSocialLinks(normalized);
             }
         } catch (err) {
             console.error("Failed to fetch social links:", err);
@@ -100,6 +107,12 @@ export default function SocialLinksTab() {
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
                 );
+            case "instagram":
+                return (
+                    <svg className="w-4 h-4 text-[#E4405F] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                );
             default:
                 return <Globe className="w-4 h-4 text-[#0A65CC] shrink-0" />;
         }
@@ -109,8 +122,8 @@ export default function SocialLinksTab() {
         const tempId = "new_" + Date.now();
         const newLink = {
             id: tempId,
-            platform_name: "LinkedIn",
-            profile_url: "",
+            provider: "LinkedIn",
+            url: "",
         };
         setSocialLinks((prev) => [...prev, newLink]);
     };
@@ -163,8 +176,9 @@ export default function SocialLinksTab() {
         setIsSubmitting(true);
 
         const linksPayload = socialLinks.map((item) => ({
-            platform_name: item.platform_name || item.platform || "Other",
-            profile_url: item.profile_url || item.url || "",
+            id: item.id,
+            provider: item.provider || item.platform_name || "LinkedIn",
+            url: item.url || item.profile_url || "",
         }));
 
         try {
@@ -255,11 +269,12 @@ export default function SocialLinksTab() {
                     ) : (
                         <div className="space-y-3">
                             {socialLinks.map((item, index) => {
-                                const platformVal = item.platform_name || item.platform || "LinkedIn";
-                                const urlVal = item.profile_url || item.url || "";
+                                const platformVal = item.provider || item.platform_name || "LinkedIn";
+                                const urlVal = item.url || item.profile_url || "";
                                 const urlError =
+                                    formErrors[`links.${index}.url`]?.[0] ||
                                     formErrors[`links.${index}.profile_url`]?.[0] ||
-                                    formErrors[`links.${index}.platform_name`]?.[0];
+                                    formErrors[`links.${index}.provider`]?.[0];
 
                                 return (
                                     <div key={item.id || index} className="space-y-1">
@@ -270,11 +285,7 @@ export default function SocialLinksTab() {
                                                 <select
                                                     value={platformVal}
                                                     onChange={(e) =>
-                                                        handleUpdateSocialLink(
-                                                            item.id,
-                                                            item.platform_name !== undefined ? "platform_name" : "platform",
-                                                            e.target.value
-                                                        )
+                                                        handleUpdateSocialLink(item.id, "provider", e.target.value)
                                                     }
                                                     className="w-full h-full bg-transparent text-xs font-bold text-[#18191C] focus:outline-none cursor-pointer"
                                                 >
@@ -292,14 +303,10 @@ export default function SocialLinksTab() {
                                                     type="text"
                                                     value={urlVal}
                                                     onChange={(e) => {
-                                                        handleUpdateSocialLink(
-                                                            item.id,
-                                                            item.profile_url !== undefined ? "profile_url" : "url",
-                                                            e.target.value
-                                                        );
-                                                        if (formErrors[`links.${index}.profile_url`]) {
+                                                        handleUpdateSocialLink(item.id, "url", e.target.value);
+                                                        if (formErrors[`links.${index}.url`]) {
                                                             const newErrs = { ...formErrors };
-                                                            delete newErrs[`links.${index}.profile_url`];
+                                                            delete newErrs[`links.${index}.url`];
                                                             setFormErrors(newErrs);
                                                         }
                                                     }}

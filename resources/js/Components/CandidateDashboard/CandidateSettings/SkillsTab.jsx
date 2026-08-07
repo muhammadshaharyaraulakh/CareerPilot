@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Wrench,
     Plus,
@@ -7,6 +7,9 @@ import {
     Check,
     X,
     Loader2,
+    Search,
+    Sparkles,
+    ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Toast from "@/Components/Toast";
@@ -14,6 +17,7 @@ import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
 
 export default function SkillsTab() {
     const [skills, setSkills] = useState([]);
+    const [masterSkills, setMasterSkills] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
@@ -30,6 +34,10 @@ export default function SkillsTab() {
         proficiency_level: "Intermediate",
     });
     const [formErrors, setFormErrors] = useState({});
+
+    // Dropdown combobox state
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     const getCsrfToken = () => {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
@@ -49,8 +57,9 @@ export default function SkillsTab() {
                 },
             });
             const json = await res.json();
-            if (json.success && Array.isArray(json.data)) {
-                setSkills(json.data);
+            if (json.success) {
+                if (Array.isArray(json.data)) setSkills(json.data);
+                if (Array.isArray(json.all_skills)) setMasterSkills(json.all_skills);
             }
         } catch (err) {
             console.error("Failed to fetch skills:", err);
@@ -60,8 +69,33 @@ export default function SkillsTab() {
         }
     };
 
+    const fetchMasterSkillsFallback = async () => {
+        if (masterSkills.length > 0) return;
+        try {
+            const res = await fetch("/candidate/master-skills", {
+                headers: { Accept: "application/json" },
+            });
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                setMasterSkills(json.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch master skills:", err);
+        }
+    };
+
     useEffect(() => {
         fetchSkills();
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleOpenAddSkill = () => {
@@ -71,6 +105,8 @@ export default function SkillsTab() {
             proficiency_level: "Intermediate",
         });
         setFormErrors({});
+        setIsDropdownOpen(false);
+        fetchMasterSkillsFallback();
         setIsSkillModalOpen(true);
     };
 
@@ -83,6 +119,7 @@ export default function SkillsTab() {
             proficiency_level: currentProficiency,
         });
         setFormErrors({});
+        setIsDropdownOpen(false);
         setIsSkillModalOpen(true);
     };
 
@@ -90,6 +127,7 @@ export default function SkillsTab() {
         e.preventDefault();
         setFormErrors({});
         setIsSubmitting(true);
+        setIsDropdownOpen(false);
 
         const payload = editingSkillId
             ? { proficiency_level: skillForm.proficiency_level }
@@ -186,6 +224,22 @@ export default function SkillsTab() {
         }
     };
 
+    // Filter master skills based on current input text
+    const filteredMasterSkills = masterSkills.filter((s) => {
+        if (!skillForm.name) return true;
+        const query = skillForm.name.toLowerCase().trim();
+        return (
+            s.name.toLowerCase().includes(query) ||
+            (s.category && s.category.toLowerCase().includes(query))
+        );
+    });
+
+    // Featured quick selection suggestions
+    const popularSuggestions = [
+        "Python", "React.js", "Docker", "AWS", "Figma", "Tailwind CSS",
+        "Kubernetes", "Node.js", "Laravel", "Machine Learning", "Cybersecurity", "UI Design"
+    ];
+
     return (
         <div className="space-y-6 max-w-4xl">
             <Toast toast={toast} onClose={() => setToast(null)} />
@@ -256,13 +310,20 @@ export default function SkillsTab() {
                                     <h4 className="text-sm font-bold text-[#18191C] truncate">
                                         {item.name}
                                     </h4>
-                                    <span
-                                        className={`inline-block px-2 py-0.5 text-[11px] font-semibold border rounded-none ${getProficiencyBadgeClass(
-                                            level
-                                        )}`}
-                                    >
-                                        {level}
-                                    </span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span
+                                            className={`inline-block px-2 py-0.5 text-[11px] font-semibold border rounded-none ${getProficiencyBadgeClass(
+                                                level
+                                            )}`}
+                                        >
+                                            {level}
+                                        </span>
+                                        {item.category && (
+                                            <span className="text-[10px] text-[#767E94] bg-[#F8F9FA] px-1.5 py-0.5 border border-[#E4E5E8]">
+                                                {item.category}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center gap-1 shrink-0">
@@ -323,26 +384,119 @@ export default function SkillsTab() {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSaveSkillSubmit} className="p-6 space-y-4">
-                                <div>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        disabled={Boolean(editingSkillId)}
-                                        value={skillForm.name}
-                                        onChange={(e) => {
-                                            setSkillForm({ ...skillForm, name: e.target.value });
-                                            if (formErrors.name) setFormErrors({ ...formErrors, name: null });
-                                        }}
-                                        placeholder="Skill Name *"
-                                        className={`w-full h-12 px-4 text-sm bg-white border ${
-                                            formErrors.name ? "border-[#E05151]" : "border-[#E4E5E8]"
-                                        } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8] disabled:bg-[#F8F9FA]`}
-                                    />
+                            <form onSubmit={handleSaveSkillSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto pb-32">
+                                {/* Custom Searchable Skill Dropdown Combobox */}
+                                <div className="relative" ref={dropdownRef}>
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            disabled={Boolean(editingSkillId)}
+                                            value={skillForm.name}
+                                            onFocus={() => !editingSkillId && setIsDropdownOpen(true)}
+                                            onChange={(e) => {
+                                                setSkillForm({ ...skillForm, name: e.target.value });
+                                                if (!editingSkillId) setIsDropdownOpen(true);
+                                                if (formErrors.name) setFormErrors({ ...formErrors, name: null });
+                                            }}
+                                            placeholder="Search or Type Skill Name *"
+                                            className={`w-full h-12 pl-4 pr-10 text-sm bg-white border ${
+                                                formErrors.name ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                            } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8] disabled:bg-[#F8F9FA]`}
+                                        />
+                                        {!editingSkillId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsDropdownOpen((prev) => !prev)}
+                                                className="absolute right-3 text-[#767E94] hover:text-[#18191C] cursor-pointer"
+                                            >
+                                                <ChevronDown className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+
                                     {formErrors.name && (
                                         <p className="text-xs text-[#E05151] mt-1 font-medium">
                                             {formErrors.name[0]}
                                         </p>
+                                    )}
+
+                                    {/* Scrollable Custom Skill Dropdown Menu */}
+                                    <AnimatePresence>
+                                        {!editingSkillId && isDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: -4 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -4 }}
+                                                className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#E4E5E8] shadow-2xl z-[100] max-h-56 overflow-y-auto divide-y divide-[#F1F2F4] rounded-none"
+                                            >
+                                                {filteredMasterSkills.length === 0 ? (
+                                                    <div className="p-3 text-xs text-[#767E94] text-center">
+                                                        No predefined skill matches. Press save to add "
+                                                        <span className="font-bold text-[#18191C]">
+                                                            {skillForm.name}
+                                                        </span>
+                                                        " as a custom skill.
+                                                    </div>
+                                                ) : (
+                                                    filteredMasterSkills.map((s) => (
+                                                        <button
+                                                            key={s.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setSkillForm({ ...skillForm, name: s.name });
+                                                                setIsDropdownOpen(false);
+                                                                if (formErrors.name) setFormErrors({ ...formErrors, name: null });
+                                                            }}
+                                                            className={`w-full text-left px-4 py-2.5 hover:bg-[#E8F1FF] flex items-center justify-between transition-colors cursor-pointer ${
+                                                                skillForm.name.toLowerCase() === s.name.toLowerCase()
+                                                                    ? "bg-[#E8F1FF] font-bold"
+                                                                    : ""
+                                                            }`}
+                                                        >
+                                                            <span className="text-sm font-semibold text-[#18191C]">
+                                                                {s.name}
+                                                            </span>
+                                                            {s.category && (
+                                                                <span className="text-[10px] font-semibold text-[#5E6670] bg-[#F1F2F4] px-2 py-0.5">
+                                                                    {s.category}
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {/* Popular quick-select chips when adding new skill */}
+                                    {!editingSkillId && (
+                                        <div className="mt-3">
+                                            <div className="flex items-center gap-1 text-[11px] font-semibold text-[#767E94] mb-1.5">
+                                                <Sparkles className="w-3.5 h-3.5 text-[#0A65CC]" />
+                                                <span>Popular Skills Suggestions:</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                                                {popularSuggestions.map((sName) => (
+                                                    <button
+                                                        key={sName}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSkillForm({ ...skillForm, name: sName });
+                                                            setIsDropdownOpen(false);
+                                                            if (formErrors.name) setFormErrors({ ...formErrors, name: null });
+                                                        }}
+                                                        className={`px-2 py-1 text-xs border transition-colors cursor-pointer ${
+                                                            skillForm.name === sName
+                                                                ? "bg-[#0A65CC] text-white border-[#0A65CC]"
+                                                                : "bg-[#F8F9FA] text-[#474C54] border-[#E4E5E8] hover:bg-[#E8F1FF] hover:border-[#0A65CC]/40"
+                                                        }`}
+                                                    >
+                                                        + {sName}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
 

@@ -101,6 +101,7 @@ Route::middleware(['auth', 'candidate'])->group(function () {
 
     // Candidate Skill Endpoints
     Route::get('/candidate/skills', [SkillController::class, 'fetch']);
+    Route::get('/candidate/master-skills', [SkillController::class, 'masterSkills']);
     Route::post('/candidate/skills', [SkillController::class, 'store']);
     Route::post('/candidate/skills/{id}', [SkillController::class, 'update']);
     Route::delete('/candidate/skills/{id}', [SkillController::class, 'destroy']);

@@ -80,7 +80,7 @@ class SocialLinkController extends Controller
     }
 
     /**
-     * Store or update social link for candidate.
+     * Store or bulk update social links for candidate.
      */
     public function store(Request $request)
     {
@@ -94,43 +94,98 @@ class SocialLinkController extends Controller
                 ], Response::HTTP_401_UNAUTHORIZED);
             }
 
+            // Handle Bulk Save ({ links: [...] })
+            if ($request->has('links')) {
+                $request->validate([
+                    'links' => ['present', 'array'],
+                    'links.*.provider' => ['nullable', 'string', 'max:255'],
+                    'links.*.platform_name' => ['nullable', 'string', 'max:255'],
+                    'links.*.url' => ['nullable', 'string', 'max:500'],
+                    'links.*.profile_url' => ['nullable', 'string', 'max:500'],
+                ]);
+
+                $linksData = $request->input('links', []);
+                $processedIds = [];
+
+                foreach ($linksData as $linkItem) {
+                    $provider = $linkItem['provider'] ?? $linkItem['platform_name'] ?? 'LinkedIn';
+                    $url = trim($linkItem['url'] ?? $linkItem['profile_url'] ?? '');
+
+                    if (empty($url)) {
+                        continue;
+                    }
+
+                    $linkId = $linkItem['id'] ?? null;
+                    if ($linkId && !str_starts_with((string)$linkId, 'new_')) {
+                        $existing = SocialLink::where('user_id', $user->id)->where('id', $linkId)->first();
+                        if ($existing) {
+                            $existing->update([
+                                'provider' => $provider,
+                                'url'      => $url,
+                            ]);
+                            $processedIds[] = $existing->id;
+                            continue;
+                        }
+                    }
+
+                    $newLink = SocialLink::create([
+                        'user_id'  => $user->id,
+                        'provider' => $provider,
+                        'url'      => $url,
+                    ]);
+                    $processedIds[] = $newLink->id;
+                }
+
+                // Remove deleted links if user saved form with items removed
+                SocialLink::where('user_id', $user->id)->whereNotIn('id', $processedIds)->delete();
+
+                $allSocialLinks = SocialLink::where('user_id', $user->id)->get();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Social links saved successfully',
+                    'data'    => $allSocialLinks,
+                ], Response::HTTP_OK);
+            }
+
+            // Handle Single Link Save
             $request->validate([
-                'provider' => ['required', 'string', 'max:255'],
-                'url'      => ['required', 'string', 'max:255'],
+                'provider' => ['nullable', 'string', 'max:255'],
+                'url'      => ['required', 'string', 'max:500'],
             ]);
 
-            $socialLink = SocialLink::updateOrCreate(
-                [
-                    'user_id'  => $user->id,
-                    'provider' => strtolower(trim($request->input('provider'))),
-                ],
-                [
-                    'url' => $request->input('url'),
-                ]
-            );
+            $provider = $request->input('provider') ?? $request->input('platform_name') ?? 'LinkedIn';
+            $url      = $request->input('url') ?? $request->input('profile_url');
+
+            $socialLink = SocialLink::create([
+                'user_id'  => $user->id,
+                'provider' => $provider,
+                'url'      => $url,
+            ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Social link saved successfully',
-                'data' => $socialLink,
+                'data'    => $socialLink,
             ], Response::HTTP_OK);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors(),
+                'errors'  => $e->errors(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save social link',
-                'error' => $e->getMessage(),
+                'message' => 'Failed to save social links',
+                'error'   => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Update existing social link as a whole.
+     * Update existing single social link.
      */
     public function update(Request $request, $id)
     {
@@ -155,30 +210,34 @@ class SocialLinkController extends Controller
 
             $request->validate([
                 'provider' => ['nullable', 'string', 'max:255'],
-                'url'      => ['required', 'string', 'max:255'],
+                'url'      => ['required', 'string', 'max:500'],
             ]);
 
+            $provider = $request->input('provider') ?? $request->input('platform_name') ?? $socialLink->provider;
+            $url      = $request->input('url') ?? $request->input('profile_url') ?? $socialLink->url;
+
             $socialLink->update([
-                'provider' => $request->filled('provider') ? strtolower(trim($request->input('provider'))) : $socialLink->provider,
-                'url'      => $request->input('url'),
+                'provider' => $provider,
+                'url'      => $url,
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Social link updated successfully',
-                'data' => $socialLink,
+                'data'    => $socialLink,
             ], Response::HTTP_OK);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors(),
+                'errors'  => $e->errors(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update social link',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -213,11 +272,12 @@ class SocialLinkController extends Controller
                 'success' => true,
                 'message' => 'Social link deleted successfully',
             ], Response::HTTP_OK);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete social link',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -4,14 +4,15 @@ import {
     Lock,
     Eye,
     EyeOff,
-    Check,
     Bell,
     UserX,
     KeyRound,
     Loader2,
+    AlertTriangle,
+    X,
 } from "lucide-react";
 import Toast from "@/Components/Toast";
-import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AccountSettingsTab() {
     const [isLoading, setIsLoading] = useState(true);
@@ -21,15 +22,17 @@ export default function AccountSettingsTab() {
 
     // Account delete confirmation modal state
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState("");
+    const [deleteError, setDeleteError] = useState("");
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [showDeletePass, setShowDeletePass] = useState(false);
 
     // Account settings state
     const [accountData, setAccountData] = useState({
-        is_public: true,
+        is_profile_public: true,
         is_cv_public: true,
         email_notifications: true,
         job_alerts: true,
-        marketing_emails: false,
     });
 
     // Password change form state
@@ -56,7 +59,7 @@ export default function AccountSettingsTab() {
     const fetchAccountSettings = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch("/candidate/settings", {
+            const res = await fetch("/candidate/account-settings", {
                 headers: {
                     Accept: "application/json",
                     "X-CSRF-TOKEN": getCsrfToken(),
@@ -65,11 +68,10 @@ export default function AccountSettingsTab() {
             const json = await res.json();
             if (json.success && json.data) {
                 setAccountData({
-                    is_public: Boolean(json.data.is_public ?? json.data.isPublic ?? true),
-                    is_cv_public: Boolean(json.data.is_cv_public ?? json.data.isCvPublic ?? true),
-                    email_notifications: Boolean(json.data.email_notifications ?? json.data.emailNotifications ?? true),
-                    job_alerts: Boolean(json.data.job_alerts ?? json.data.jobAlerts ?? true),
-                    marketing_emails: Boolean(json.data.marketing_emails ?? json.data.marketingEmails ?? false),
+                    is_profile_public: Boolean(json.data.is_profile_public ?? true),
+                    is_cv_public: Boolean(json.data.is_cv_public ?? true),
+                    email_notifications: Boolean(json.data.email_notifications ?? true),
+                    job_alerts: Boolean(json.data.job_alerts ?? true),
                 });
             }
         } catch (err) {
@@ -90,7 +92,7 @@ export default function AccountSettingsTab() {
         setIsSubmittingAccount(true);
 
         try {
-            const res = await fetch("/candidate/settings", {
+            const res = await fetch("/candidate/account-settings", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -134,14 +136,18 @@ export default function AccountSettingsTab() {
         setIsSubmittingPassword(true);
 
         try {
-            const res = await fetch("/candidate/settings/change-password", {
-                method: "POST",
+            const res = await fetch("/password", {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": getCsrfToken(),
                     Accept: "application/json",
                 },
-                body: JSON.stringify(passwords),
+                body: JSON.stringify({
+                    current_password: passwords.current_password,
+                    password: passwords.new_password,
+                    password_confirmation: passwords.new_password_confirmation,
+                }),
             });
 
             const json = await res.json();
@@ -151,8 +157,8 @@ export default function AccountSettingsTab() {
                 return;
             }
 
-            if (json.success) {
-                showToast(json.message || "Password changed successfully!", "success");
+            if (json.success || res.ok) {
+                showToast(json.message || "Password updated successfully!", "success");
                 setPasswords({
                     current_password: "",
                     new_password: "",
@@ -166,6 +172,51 @@ export default function AccountSettingsTab() {
             showToast("Server exception while changing password", "error");
         } finally {
             setIsSubmittingPassword(false);
+        }
+    };
+
+    const handleDeleteAccountConfirm = async (e) => {
+        if (e) e.preventDefault();
+        if (!deletePassword) {
+            setDeleteError("Please enter your current password to confirm account deletion.");
+            return;
+        }
+
+        setDeleteError("");
+        setIsDeletingAccount(true);
+
+        try {
+            const res = await fetch("/profile", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+                body: JSON.stringify({ password: deletePassword }),
+            });
+
+            const json = await res.json();
+
+            if (res.status === 422 || json.errors) {
+                const passErr = json.errors?.password?.[0] || "Invalid password provided.";
+                setDeleteError(passErr);
+                return;
+            }
+
+            if (json.success || res.ok) {
+                showToast("Account deleted. Redirecting...", "success");
+                setTimeout(() => {
+                    window.location.href = json.redirect || "/";
+                }, 1000);
+            } else {
+                setDeleteError(json.message || json.error || "Failed to delete account");
+            }
+        } catch (err) {
+            console.error("Account deletion error:", err);
+            setDeleteError("Server exception while deleting account.");
+        } finally {
+            setIsDeletingAccount(false);
         }
     };
 
@@ -187,10 +238,10 @@ export default function AccountSettingsTab() {
                         </div>
                         <div>
                             <h3 className="text-base font-bold text-[#18191C]">
-                                Contact Credentials & Visibility
+                                Profile Visibility & Preferences
                             </h3>
                             <p className="text-xs text-[#767E94]">
-                                Manage your candidate profile visibility and preferences
+                                Manage your candidate profile visibility and notification settings
                             </p>
                         </div>
                     </div>
@@ -203,15 +254,15 @@ export default function AccountSettingsTab() {
                                     Public Profile Visibility
                                 </h4>
                                 <p className="text-[11px] text-[#767E94]">
-                                    Allow verified employers and headhunters to search and view your candidate profile
+                                    Allow verified employers and recruiters to search and view your profile
                                 </p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input
                                     type="checkbox"
-                                    checked={accountData.is_public}
+                                    checked={accountData.is_profile_public}
                                     onChange={(e) =>
-                                        setAccountData({ ...accountData, is_public: e.target.checked })
+                                        setAccountData({ ...accountData, is_profile_public: e.target.checked })
                                     }
                                     className="sr-only peer"
                                 />
@@ -364,11 +415,13 @@ export default function AccountSettingsTab() {
                                 value={passwords.new_password}
                                 onChange={(e) => {
                                     setPasswords({ ...passwords, new_password: e.target.value });
-                                    if (passErrors.new_password) setPassErrors({ ...passErrors, new_password: null });
+                                    if (passErrors.password || passErrors.new_password) {
+                                        setPassErrors({ ...passErrors, password: null, new_password: null });
+                                    }
                                 }}
                                 placeholder="Enter new password"
                                 className={`w-full h-12 pl-11 pr-11 text-sm bg-white border ${
-                                    passErrors.new_password ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                    (passErrors.password || passErrors.new_password) ? "border-[#E05151]" : "border-[#E4E5E8]"
                                 } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]`}
                             />
                             <button
@@ -383,9 +436,9 @@ export default function AccountSettingsTab() {
                                 )}
                             </button>
                         </div>
-                        {passErrors.new_password && (
+                        {(passErrors.password || passErrors.new_password) && (
                             <p className="text-xs text-[#E05151] mt-1 font-medium">
-                                {passErrors.new_password[0]}
+                                {passErrors.password?.[0] || passErrors.new_password?.[0]}
                             </p>
                         )}
                     </div>
@@ -451,7 +504,11 @@ export default function AccountSettingsTab() {
                     </p>
                     <button
                         type="button"
-                        onClick={() => setIsDeleteModalOpen(true)}
+                        onClick={() => {
+                            setDeletePassword("");
+                            setDeleteError("");
+                            setIsDeleteModalOpen(true);
+                        }}
                         className="px-4 py-2.5 bg-[#E05151] hover:bg-[#C93B3B] text-white font-bold text-xs rounded-none border-none cursor-pointer transition-colors"
                     >
                         Delete Account
@@ -459,21 +516,108 @@ export default function AccountSettingsTab() {
                 </div>
             </div>
 
-            <DeleteConfirmationModal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-                onConfirm={() => {
-                    setIsDeletingAccount(true);
-                    setTimeout(() => {
-                        setIsDeletingAccount(false);
-                        setIsDeleteModalOpen(false);
-                        showToast("Account deletion request submitted.", "error");
-                    }, 600);
-                }}
-                isDeleting={isDeletingAccount}
-                title="Delete Account"
-                message="Are you sure you want to delete your candidate account? All profile details, resumes, and application records will be permanently deleted. This action cannot be undone."
-            />
+            {/* Delete Account Confirmation Modal */}
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+                        />
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            transition={{ duration: 0.2 }}
+                            className="relative w-full max-w-md bg-white rounded-none shadow-2xl overflow-hidden z-10 border border-[#E4E5E8]"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-[#E4E5E8] bg-[#F8F9FA]">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-none bg-[#FCE8E8] text-[#E05151] flex items-center justify-center">
+                                        <AlertTriangle className="w-5 h-5" />
+                                    </div>
+                                    <h3 className="text-base font-bold text-[#18191C]">
+                                        Confirm Account Deletion
+                                    </h3>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsDeleteModalOpen(false)}
+                                    className="p-1.5 text-[#767E94] hover:text-[#18191C] hover:bg-[#E4E5E8] transition-colors rounded-none cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleDeleteAccountConfirm} className="p-6 space-y-4">
+                                <p className="text-xs text-[#5E6670] leading-relaxed">
+                                    Are you sure you want to delete your account? This action is permanent and cannot be undone. Please enter your password to confirm.
+                                </p>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
+                                        Current Password *
+                                    </label>
+                                    <div className="relative flex items-center">
+                                        <Lock className="w-4 h-4 text-[#767E94] absolute left-4 pointer-events-none" />
+                                        <input
+                                            type={showDeletePass ? "text" : "password"}
+                                            value={deletePassword}
+                                            onChange={(e) => {
+                                                setDeletePassword(e.target.value);
+                                                setDeleteError("");
+                                            }}
+                                            placeholder="Enter password to confirm"
+                                            className={`w-full h-11 pl-11 pr-11 text-xs bg-white border ${
+                                                deleteError ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                            } rounded-none focus:ring-1 focus:ring-[#E05151] focus:border-[#E05151] transition-colors placeholder:text-[#9199A8]`}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowDeletePass(!showDeletePass)}
+                                            className="absolute right-4 text-[#767E94] hover:text-[#18191C] cursor-pointer"
+                                        >
+                                            {showDeletePass ? (
+                                                <EyeOff className="w-4 h-4" />
+                                            ) : (
+                                                <Eye className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                    </div>
+                                    {deleteError && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {deleteError}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsDeleteModalOpen(false)}
+                                        disabled={isDeletingAccount}
+                                        className="px-4 h-10 bg-[#F1F2F4] text-[#18191C] hover:bg-[#E4E5E8] font-semibold text-xs rounded-none transition-colors cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isDeletingAccount}
+                                        className="px-5 h-10 bg-[#E05151] hover:bg-[#C93B3B] text-white font-semibold text-xs rounded-none border-none transition-colors cursor-pointer flex items-center gap-2"
+                                    >
+                                        {isDeletingAccount && <Loader2 className="w-4 h-4 animate-spin" />}
+                                        <span>{isDeletingAccount ? "Deleting..." : "Permanently Delete"}</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

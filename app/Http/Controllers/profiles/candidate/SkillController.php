@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 class SkillController extends Controller
 {
     /**
-     * Fetch candidate's skills.
+     * Fetch candidate's skills along with all available master skills.
      */
     public function fetch()
     {
@@ -25,17 +25,40 @@ class SkillController extends Controller
                 ], Response::HTTP_401_UNAUTHORIZED);
             }
 
-            $skills = $user->skills()->get();
+            $userSkills = $user->skills()->get();
+            $allSkills  = Skill::select('id', 'name', 'category')->orderBy('name', 'asc')->get();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Skills fetched successfully',
-                'data' => $skills,
+                'data' => $userSkills,
+                'all_skills' => $allSkills,
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch skills',
+                'error' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Fetch all master skills.
+     */
+    public function masterSkills()
+    {
+        try {
+            $allSkills = Skill::select('id', 'name', 'category')->orderBy('name', 'asc')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $allSkills,
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch master skills',
                 'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -63,17 +86,31 @@ class SkillController extends Controller
             ]);
 
             $skillName = trim($request->input('name'));
-            $skill = Skill::firstOrCreate(
-                ['name' => $skillName],
-                ['category' => $request->input('category')]
-            );
+            
+            // Look up existing skill or create new
+            $existingSkill = Skill::whereRaw('LOWER(name) = ?', [strtolower($skillName)])->first();
+
+            if ($existingSkill) {
+                $skill = $existingSkill;
+            } else {
+                $skill = Skill::create([
+                    'name'     => $skillName,
+                    'category' => $request->input('category') ?? 'General',
+                ]);
+            }
 
             $proficiency = $request->input('proficiency_level') ?? 'Intermediate';
 
-            // Sync/attach to user via pivot
-            $user->skills()->syncWithoutDetaching([
-                $skill->id => ['proficiency_level' => $proficiency]
-            ]);
+            // Explicitly check pivot attachment so proficiency_level is updated even if skill already attached
+            if ($user->skills()->where('skill_id', $skill->id)->exists()) {
+                $user->skills()->updateExistingPivot($skill->id, [
+                    'proficiency_level' => $proficiency
+                ]);
+            } else {
+                $user->skills()->attach($skill->id, [
+                    'proficiency_level' => $proficiency
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

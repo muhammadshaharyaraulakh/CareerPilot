@@ -28,10 +28,10 @@ class AccountSettingController extends Controller
                 'success' => true,
                 'message' => 'Account settings fetched successfully',
                 'data' => [
-                    'is_profile_public'   => (bool) $user->is_profile_public,
-                    'is_cv_public'        => (bool) $user->is_cv_public,
-                    'job_alerts'          => (bool) $user->job_alerts,
-                    'email_notifications' => (bool) $user->email_notifications,
+                    'is_profile_public'   => (bool) ($user->is_profile_public ?? true),
+                    'is_cv_public'        => (bool) ($user->is_cv_public ?? true),
+                    'job_alerts'          => (bool) ($user->job_alerts ?? true),
+                    'email_notifications' => (bool) ($user->email_notifications ?? true),
                 ],
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

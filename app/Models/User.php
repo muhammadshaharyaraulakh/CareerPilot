@@ -56,7 +56,7 @@ class User extends Authenticatable
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class);
+        return $this->belongsToMany(Skill::class)->withPivot('proficiency_level')->withTimestamps();
     }
 
     public function projects()
