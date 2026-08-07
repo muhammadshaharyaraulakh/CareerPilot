@@ -1,14 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "@inertiajs/react";
-import { Search, Bell, Menu, ChevronDown } from "lucide-react";
+import { Search, Menu, ChevronDown } from "lucide-react";
 import ApplicationLogo from "@/Components/ApplicationLogo";
 
 export default function CandidateNavbar({
     userName = "Esther Howard",
-    userAvatar = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    userAvatar: initialUserAvatar = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     onMobileSidebarToggle,
 }) {
-    const [selectedCountry, setSelectedCountry] = useState("India");
+    const [selectedCountry, setSelectedCountry] = useState("Pakistan");
+    const [avatarUrl, setAvatarUrl] = useState(initialUserAvatar);
+
+    const fetchAvatar = async () => {
+        try {
+            const res = await fetch("/candidate/personal-profile/avatar");
+            const json = await res.json();
+            if (json.success && json.data && json.data.profile_picture) {
+                setAvatarUrl(json.data.profile_picture);
+            }
+        } catch (err) {
+            console.error("Failed to fetch candidate avatar:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchAvatar();
+
+        const handleAvatarUpdate = (e) => {
+            if (e.detail && e.detail.profile_picture !== undefined) {
+                if (e.detail.profile_picture) {
+                    setAvatarUrl(e.detail.profile_picture);
+                } else {
+                    setAvatarUrl(initialUserAvatar);
+                }
+            } else {
+                fetchAvatar();
+            }
+        };
+
+        window.addEventListener("profile-picture-updated", handleAvatarUpdate);
+        return () => {
+            window.removeEventListener("profile-picture-updated", handleAvatarUpdate);
+        };
+    }, []);
 
     return (
         <header className="w-full bg-white border-b border-[#E4E5E8] py-3.5 px-4 sm:px-6 lg:px-8 relative z-40 font-sans">
@@ -33,11 +67,18 @@ export default function CandidateNavbar({
                 <div className="hidden md:flex items-center flex-1 max-w-2xl gap-0 border border-[#E4E5E8] rounded-none bg-white overflow-hidden shadow-2xs focus-within:border-[#0A65CC] transition-colors">
                     {/* Country selector */}
                     <div className="flex items-center gap-2 px-3 py-2 bg-[#F8F9FA] border-r border-[#E4E5E8] shrink-0 cursor-pointer hover:bg-[#F1F2F4] transition-colors">
-                        <svg className="w-5 h-3.5 object-cover rounded-xs" viewBox="0 0 640 480">
-                            <path fill="#ff9933" d="0 0h640v160H0z" />
-                            <path fill="#fff" d="0 160h640v160H0z" />
-                            <path fill="#138808" d="0 320h640v160H0z" />
-                            <circle cx="320" cy="240" r="60" fill="none" stroke="#000080" strokeWidth="12" />
+                        <svg
+                            className="w-5 h-3.5 object-cover rounded-xs"
+                            viewBox="0 0 900 600"
+                        >
+                            <rect width="900" height="600" fill="#01411C" />
+                            <rect width="225" height="600" fill="#FFFFFF" />
+                            <circle cx="562.5" cy="300" r="180" fill="#FFFFFF" />
+                            <circle cx="612.5" cy="250" r="162" fill="#01411C" />
+                            <polygon
+                                points="562.5,165 577.8,212.1 627.3,212.1 587.3,241.2 602.6,288.3 562.5,259.2 522.4,288.3 537.7,241.2 497.7,212.1 547.2,212.1"
+                                fill="#FFFFFF"
+                            />
                         </svg>
                         <span className="text-xs sm:text-sm font-semibold text-[#18191C]">
                             {selectedCountry}
@@ -56,28 +97,20 @@ export default function CandidateNavbar({
                     </div>
                 </div>
 
-                {/* Right: Notification Bell & Candidate Profile Avatar */}
+                {/* Right: Candidate Profile Avatar */}
                 <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                    {/* Notifications Bell */}
-                    <button
-                        type="button"
-                        aria-label="Notifications"
-                        className="relative p-2 text-[#18191C] hover:text-[#0A65CC] hover:bg-[#F1F2F4] rounded-full transition-colors cursor-pointer"
-                    >
-                        <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#E05151] rounded-full ring-2 ring-white" />
-                    </button>
-
                     {/* User Avatar */}
                     <div className="flex items-center gap-2 cursor-pointer group">
                         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-[#E4E5E8] shrink-0">
                             <img
-                                src={userAvatar}
+                                src={avatarUrl}
                                 alt={userName}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                 onError={(e) => {
                                     e.target.src =
-                                        "https://ui-avatars.com/api/?name=Esther+Howard&background=0A65CC&color=fff";
+                                        "https://ui-avatars.com/api/?name=" +
+                                        encodeURIComponent(userName) +
+                                        "&background=0A65CC&color=fff";
                                 }}
                             />
                         </div>

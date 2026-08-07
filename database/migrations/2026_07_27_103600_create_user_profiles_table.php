@@ -19,7 +19,6 @@ return new class extends Migration {
             $table->string('phone')->nullable();
             $table->string('website')->nullable();
             $table->string('location')->nullable();
-            $table->json('resumes')->nullable();
             $table->boolean('is_public')->default(true);
             $table->string('domicile')->nullable();
             $table->string('gender')->nullable();

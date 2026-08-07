@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\profiles\candidate;
 
+use App\Http\Controllers\Controller;
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +45,38 @@ class PersonalProfileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch candidate profile data',
+                'error' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Fetch candidate profile picture only.
+     */
+    public function fetchProfilePicture()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated',
+                ], Response::HTTP_401_UNAUTHORIZED);
+            }
+
+            $profile = UserProfile::where('user_id', $user->id)->first();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'profile_picture' => $profile ? $profile->profile_picture : null,
+                ],
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch profile picture',
                 'error' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

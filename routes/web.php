@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\profiles\candidate\PersonalProfileController;
+use App\Http\Controllers\profiles\candidate\ResumeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -47,6 +49,20 @@ Route::middleware(['auth', 'candidate'])->group(function () {
     Route::get('/CandidateDashboard', function () {
         return Inertia::render('CandidateDashboard');
     })->name('CandidateDashboard');
+
+    // Candidate Personal Profile Endpoints
+    Route::get('/candidate/personal-profile', [PersonalProfileController::class, 'fetchPersonalData']);
+    Route::get('/candidate/personal-profile/avatar', [PersonalProfileController::class, 'fetchProfilePicture']);
+    Route::post('/candidate/personal-profile/images', [PersonalProfileController::class, 'updateimages']);
+    Route::delete('/candidate/personal-profile/images', [PersonalProfileController::class, 'deleteImage']);
+    Route::post('/candidate/personal-profile/update', [PersonalProfileController::class, 'update']);
+
+    // Candidate Resume Endpoints
+    Route::get('/candidate/resumes', [ResumeController::class, 'index']);
+    Route::get('/candidate/resumes/{id}', [ResumeController::class, 'fetchResume']);
+    Route::post('/candidate/resumes', [ResumeController::class, 'store']);
+    Route::post('/candidate/resumes/{id}', [ResumeController::class, 'update']);
+    Route::delete('/candidate/resumes/{id}', [ResumeController::class, 'destroy']);
 });
 
 /*
