@@ -151,8 +151,8 @@ export default function DatePickerInput({ value, onChange, id, name, placeholder
 
             {/* Custom Modern Popover */}
             {isOpen && (
-                <div className={`absolute mt-2 z-50 w-[calc(100vw-3.5rem)] sm:w-80 max-w-[320px] bg-white border border-[#E4E5E8] rounded-xl shadow-2xl p-4 animate-fadeIn ${
-                    alignRight ? "right-0 left-auto" : "left-0"
+                <div className={`absolute mt-2 z-[100] w-[calc(100vw-3rem)] sm:w-80 max-w-[290px] sm:max-w-[320px] bg-white border border-[#E4E5E8] rounded-xl shadow-2xl p-3 sm:p-4 animate-fadeIn left-1/2 -translate-x-1/2 ${
+                    alignRight ? "sm:left-auto sm:right-0 sm:translate-x-0" : "sm:left-0 sm:right-auto sm:translate-x-0"
                 }`}>
                     {/* Header: Month & Year Selectors */}
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#F1F2F4]">

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
     Award,
     Plus,
@@ -9,128 +9,193 @@ import {
     X,
     UploadCloud,
     ExternalLink,
+    Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Toast from "@/Components/Toast";
+import DatePickerInput from "@/Components/CompanyProfile/DatePickerInput";
+import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
 
 export default function CertificationsTab() {
-    // Certifications state
-    const [certifications, setCertifications] = useState([
-        {
-            id: 1,
-            title: "AWS Certified Solutions Architect – Associate",
-            issuing_organization: "Amazon Web Services (AWS)",
-            credential_id: "AWS-PSA-89421",
-            credential_url: "https://aws.amazon.com/verification",
-            issue_date: "2023-05-10",
-            expiration_date: "2026-05-10",
-            does_not_expire: false,
-            certificate_image: null,
-        },
-        {
-            id: 2,
-            title: "Meta Certified Professional Frontend Developer",
-            issuing_organization: "Meta / Coursera",
-            credential_id: "META-FRONTEND-2022",
-            credential_url: "https://coursera.org/verify/meta-frontend",
-            issue_date: "2022-11-01",
-            expiration_date: "",
-            does_not_expire: true,
-            certificate_image: null,
-        },
-    ]);
+    const [certifications, setCertifications] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    // Delete confirmation state
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Certification modal state
     const [isCertModalOpen, setIsCertModalOpen] = useState(false);
     const [editingCertId, setEditingCertId] = useState(null);
     const certImageInputRef = useRef(null);
+    const [selectedCertFile, setSelectedCertFile] = useState(null);
     const [certImagePreview, setCertImagePreview] = useState(null);
     const [certForm, setCertForm] = useState({
         title: "",
         issuing_organization: "",
-        credential_id: "",
-        credential_url: "",
         issue_date: "",
-        expiration_date: "",
-        does_not_expire: false,
     });
-    const [showCertSuccess, setShowCertSuccess] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
 
-    // Handlers
+    const getCsrfToken = () => {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    };
+
+    const showToast = (text, type = "success", duration = 3000) => {
+        setToast({ text, type, duration });
+    };
+
+    const fetchCertifications = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch("/candidate/certifications", {
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                },
+            });
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                setCertifications(json.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch certifications:", err);
+            showToast("Failed to load certifications", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCertifications();
+    }, []);
+
     const handleOpenAddCert = () => {
         setEditingCertId(null);
         setCertForm({
             title: "",
             issuing_organization: "",
-            credential_id: "",
-            credential_url: "",
             issue_date: "",
-            expiration_date: "",
-            does_not_expire: false,
         });
+        setSelectedCertFile(null);
         setCertImagePreview(null);
+        setFormErrors({});
         setIsCertModalOpen(true);
     };
 
     const handleOpenEditCert = (item) => {
         setEditingCertId(item.id);
         setCertForm({
-            title: item.title,
-            issuing_organization: item.issuing_organization,
-            credential_id: item.credential_id || "",
-            credential_url: item.credential_url || "",
+            title: item.title || "",
+            issuing_organization: item.issuing_organization || "",
             issue_date: item.issue_date || "",
-            expiration_date: item.expiration_date || "",
-            does_not_expire: item.does_not_expire || false,
         });
-        setCertImagePreview(item.certificate_image || null);
+        setSelectedCertFile(null);
+        setCertImagePreview(item.certification_image || item.certificate_image || null);
+        setFormErrors({});
         setIsCertModalOpen(true);
     };
 
     const handleCertImageSelect = (e) => {
         const file = e.target.files?.[0];
         if (file) {
+            setSelectedCertFile(file);
             setCertImagePreview(URL.createObjectURL(file));
         }
     };
 
-    const handleSaveCertSubmit = (e) => {
+    const handleSaveCertSubmit = async (e) => {
         e.preventDefault();
-        if (!certForm.title.trim() || !certForm.issuing_organization.trim()) return;
+        setFormErrors({});
+        setIsSubmitting(true);
 
-        if (editingCertId) {
-            setCertifications((prev) =>
-                prev.map((item) =>
-                    item.id === editingCertId
-                        ? { ...item, ...certForm, certificate_image: certImagePreview }
-                        : item
-                )
-            );
-        } else {
-            const newCert = {
-                id: Date.now(),
-                ...certForm,
-                certificate_image: certImagePreview,
-            };
-            setCertifications((prev) => [newCert, ...prev]);
+        const formData = new FormData();
+        formData.append("title", certForm.title || "");
+        formData.append("issuing_organization", certForm.issuing_organization || "");
+        if (certForm.issue_date) formData.append("issue_date", certForm.issue_date);
+        if (selectedCertFile) {
+            formData.append("certification_image", selectedCertFile);
         }
 
-        setIsCertModalOpen(false);
-        setShowCertSuccess(true);
-        setTimeout(() => setShowCertSuccess(false), 3000);
+        const url = editingCertId
+            ? `/candidate/certifications/${editingCertId}`
+            : "/candidate/certifications";
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+                body: formData,
+            });
+
+            const json = await res.json();
+
+            if (res.status === 422 || json.errors) {
+                setFormErrors(json.errors || {});
+                return;
+            }
+
+            if (json.success) {
+                showToast(
+                    json.message ||
+                        (editingCertId
+                            ? "Certification updated successfully!"
+                            : "Certification added successfully!"),
+                    "success"
+                );
+                setIsCertModalOpen(false);
+                fetchCertifications();
+            } else {
+                showToast(json.message || json.error || "Failed to save certification", "error");
+            }
+        } catch (err) {
+            console.error("Save certification error:", err);
+            showToast("Server exception while saving certification", "error");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const handleDeleteCert = (id) => {
-        setCertifications((prev) => prev.filter((item) => item.id !== id));
+    const handlePromptDeleteCert = (id) => {
+        setDeleteTargetId(id);
+    };
+
+    const confirmDeleteCert = async () => {
+        if (!deleteTargetId) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/candidate/certifications/${deleteTargetId}`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                showToast("Certification deleted successfully!", "success");
+                setCertifications((prev) => prev.filter((item) => item.id !== deleteTargetId));
+                setDeleteTargetId(null);
+            } else {
+                showToast(json.message || json.error || "Failed to delete certification", "error");
+            }
+        } catch (err) {
+            console.error("Delete certification error:", err);
+            showToast("Server exception while deleting certification", "error");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
         <div className="space-y-6 max-w-4xl">
-            {showCertSuccess && (
-                <div className="p-4 bg-[#EAF6ED] border border-[#0BA02C]/20 rounded-none text-[#0BA02C] text-xs sm:text-sm font-semibold flex items-center gap-2 animate-fadeIn">
-                    <Check className="w-4 h-4" />
-                    <span>Certifications & licenses updated successfully!</span>
-                </div>
-            )}
+            <Toast toast={toast} onClose={() => setToast(null)} />
 
             <div className="flex items-center justify-between pb-2 border-b border-[#E4E5E8]">
                 <div className="flex items-center gap-3">
@@ -158,7 +223,12 @@ export default function CertificationsTab() {
             </div>
 
             {/* Saved Certifications List */}
-            {certifications.length === 0 ? (
+            {isLoading ? (
+                <div className="p-8 text-center text-[#767E94]">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0A65CC]" />
+                    <p className="text-xs mt-2 font-semibold">Loading certifications...</p>
+                </div>
+            ) : certifications.length === 0 ? (
                 <div className="p-8 border border-dashed border-[#E4E5E8] bg-[#F8F9FA] text-center space-y-3">
                     <Award className="w-12 h-12 text-[#9199A3] mx-auto" />
                     <h4 className="text-sm font-bold text-[#18191C]">
@@ -184,9 +254,9 @@ export default function CertificationsTab() {
                         >
                             <div className="flex items-start gap-4">
                                 <div className="w-14 h-14 bg-[#F8F9FA] border border-[#E4E5E8] flex items-center justify-center shrink-0 overflow-hidden rounded-none">
-                                    {item.certificate_image ? (
+                                    {(item.certification_image || item.certificate_image) ? (
                                         <img
-                                            src={item.certificate_image}
+                                            src={item.certification_image || item.certificate_image}
                                             alt={item.title}
                                             className="w-full h-full object-cover"
                                         />
@@ -204,35 +274,11 @@ export default function CertificationsTab() {
                                         {item.issuing_organization}
                                     </p>
 
-                                    {(item.issue_date || item.expiration_date || item.does_not_expire) && (
+                                    {item.issue_date && (
                                         <div className="flex items-center gap-1 text-[11px] text-[#9199A3]">
                                             <Calendar className="w-3.5 h-3.5" />
-                                            <span>
-                                                Issued {item.issue_date || "N/A"} —{" "}
-                                                {item.does_not_expire
-                                                    ? "No Expiration"
-                                                    : `Expires ${item.expiration_date || "N/A"}`}
-                                            </span>
+                                            <span>Issued {item.issue_date}</span>
                                         </div>
-                                    )}
-
-                                    {item.credential_id && (
-                                        <p className="text-xs text-[#767E94]">
-                                            <span className="font-medium text-[#18191C]">Credential ID:</span>{" "}
-                                            {item.credential_id}
-                                        </p>
-                                    )}
-
-                                    {item.credential_url && (
-                                        <a
-                                            href={item.credential_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1 text-xs text-[#0A65CC] font-semibold hover:underline pt-0.5"
-                                        >
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                            <span>Verify Credential</span>
-                                        </a>
                                     )}
                                 </div>
                             </div>
@@ -249,7 +295,7 @@ export default function CertificationsTab() {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => handleDeleteCert(item.id)}
+                                    onClick={() => handlePromptDeleteCert(item.id)}
                                     className="px-3 py-1.5 bg-[#FFF0F0] hover:bg-[#FFE5E5] text-[#E05151] font-semibold text-xs rounded-none flex items-center gap-1.5 cursor-pointer transition-colors"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -295,126 +341,69 @@ export default function CertificationsTab() {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSaveCertSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                            <form onSubmit={handleSaveCertSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto pb-36">
                                 <div>
-                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Certification Title *
-                                    </label>
                                     <input
                                         type="text"
-                                        required
+                                        name="title"
                                         value={certForm.title}
-                                        onChange={(e) =>
-                                            setCertForm({ ...certForm, title: e.target.value })
-                                        }
-                                        placeholder="e.g. AWS Certified Developer"
-                                        className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
+                                        onChange={(e) => {
+                                            setCertForm({ ...certForm, title: e.target.value });
+                                            if (formErrors.title) setFormErrors({ ...formErrors, title: null });
+                                        }}
+                                        placeholder="Certification Title *"
+                                        className={`w-full h-12 px-4 text-sm bg-white border ${
+                                            formErrors.title ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                        } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]`}
                                     />
+                                    {formErrors.title && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {formErrors.title[0]}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Issuing Organization *
-                                    </label>
                                     <input
                                         type="text"
-                                        required
+                                        name="issuing_organization"
                                         value={certForm.issuing_organization}
-                                        onChange={(e) =>
-                                            setCertForm({
-                                                ...certForm,
-                                                issuing_organization: e.target.value,
-                                            })
-                                        }
-                                        placeholder="e.g. Amazon Web Services, Google, Coursera"
-                                        className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
+                                        onChange={(e) => {
+                                            setCertForm({ ...certForm, issuing_organization: e.target.value });
+                                            if (formErrors.issuing_organization) setFormErrors({ ...formErrors, issuing_organization: null });
+                                        }}
+                                        placeholder="Issuing Organization *"
+                                        className={`w-full h-12 px-4 text-sm bg-[#ffffff] border ${
+                                            formErrors.issuing_organization ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                        } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]`}
                                     />
+                                    {formErrors.issuing_organization && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {formErrors.issuing_organization[0]}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <DatePickerInput
+                                        name="issue_date"
+                                        value={certForm.issue_date}
+                                        placeholder="Issue Date"
+                                        onChange={(e) => {
+                                            setCertForm({ ...certForm, issue_date: e.target.value });
+                                            if (formErrors.issue_date) setFormErrors({ ...formErrors, issue_date: null });
+                                        }}
+                                    />
+                                    {formErrors.issue_date && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {formErrors.issue_date[0]}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Credential ID
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={certForm.credential_id}
-                                        onChange={(e) =>
-                                            setCertForm({ ...certForm, credential_id: e.target.value })
-                                        }
-                                        placeholder="e.g. ABC-123456"
-                                        className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Verification URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={certForm.credential_url}
-                                        onChange={(e) =>
-                                            setCertForm({ ...certForm, credential_url: e.target.value })
-                                        }
-                                        placeholder="e.g. https://example.com/verify/123"
-                                        className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                            Issue Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={certForm.issue_date}
-                                            onChange={(e) =>
-                                                setCertForm({ ...certForm, issue_date: e.target.value })
-                                            }
-                                            className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors text-[#18191C]"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                            Expiration Date
-                                        </label>
-                                        <input
-                                            type="date"
-                                            disabled={certForm.does_not_expire}
-                                            value={certForm.does_not_expire ? "" : certForm.expiration_date}
-                                            onChange={(e) =>
-                                                setCertForm({
-                                                    ...certForm,
-                                                    expiration_date: e.target.value,
-                                                })
-                                            }
-                                            className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors text-[#18191C] disabled:bg-[#F8F9FA] disabled:cursor-not-allowed"
-                                        />
-                                    </div>
-                                </div>
-
-                                <label className="flex items-center gap-2 cursor-pointer pt-1">
-                                    <input
-                                        type="checkbox"
-                                        checked={certForm.does_not_expire}
-                                        onChange={(e) =>
-                                            setCertForm({
-                                                ...certForm,
-                                                does_not_expire: e.target.checked,
-                                            })
-                                        }
-                                        className="w-4 h-4 rounded-none text-[#0A65CC] focus:ring-[#0A65CC] border-[#E4E5E8] cursor-pointer"
-                                    />
-                                    <span className="text-xs font-medium text-[#18191C]">
-                                        This certification does not expire
-                                    </span>
-                                </label>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Certificate Badge / Document Image
+                                        Certification Document / Badge Image
                                     </label>
                                     <input
                                         type="file"
@@ -429,7 +418,7 @@ export default function CertificationsTab() {
                                             {certImagePreview ? (
                                                 <img
                                                     src={certImagePreview}
-                                                    alt="Certificate Image"
+                                                    alt="Certification Image"
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -443,12 +432,15 @@ export default function CertificationsTab() {
                                         </div>
 
                                         <div className="flex items-center justify-between text-xs">
-                                            <span className="text-[#767E94]">Badge / Certificate</span>
+                                            <span className="text-[#767E94]">Certificate Image</span>
                                             <div className="flex items-center gap-3">
                                                 {certImagePreview && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => setCertImagePreview(null)}
+                                                        onClick={() => {
+                                                            setSelectedCertFile(null);
+                                                            setCertImagePreview(null);
+                                                        }}
                                                         className="text-[#767E94] hover:text-[#E05151] font-semibold cursor-pointer"
                                                     >
                                                         Remove
@@ -464,6 +456,11 @@ export default function CertificationsTab() {
                                             </div>
                                         </div>
                                     </div>
+                                    {formErrors.certification_image && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {formErrors.certification_image[0]}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E4E5E8]">
@@ -476,9 +473,11 @@ export default function CertificationsTab() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 h-12 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-sm rounded-none border-none shadow-xs transition-colors cursor-pointer"
+                                        disabled={isSubmitting}
+                                        className="px-6 h-12 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-sm rounded-none border-none shadow-xs transition-colors cursor-pointer flex items-center gap-2"
                                     >
-                                        {editingCertId ? "Update Certificate" : "Save Certificate"}
+                                        {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                        <span>{editingCertId ? "Update Certification" : "Save Certification"}</span>
                                     </button>
                                 </div>
                             </form>
@@ -486,6 +485,15 @@ export default function CertificationsTab() {
                     </div>
                 )}
             </AnimatePresence>
+
+            <DeleteConfirmationModal
+                isOpen={Boolean(deleteTargetId)}
+                onClose={() => setDeleteTargetId(null)}
+                onConfirm={confirmDeleteCert}
+                isDeleting={isDeleting}
+                title="Delete Certification"
+                message="Are you sure you want to delete this certification? This action cannot be undone."
+            />
         </div>
     );
 }

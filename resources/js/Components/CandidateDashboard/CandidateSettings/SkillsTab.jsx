@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Wrench,
     Plus,
@@ -6,75 +6,171 @@ import {
     Trash2,
     Check,
     X,
+    Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Toast from "@/Components/Toast";
+import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
 
 export default function SkillsTab() {
-    // Skills state with simple proficiency badges
-    const [skills, setSkills] = useState([
-        { id: 1, name: "React.js", proficiency: "Expert" },
-        { id: 2, name: "Laravel", proficiency: "Advanced" },
-        { id: 3, name: "Tailwind CSS", proficiency: "Expert" },
-        { id: 4, name: "TypeScript", proficiency: "Intermediate" },
-        { id: 5, name: "Node.js / Express", proficiency: "Intermediate" },
-        { id: 6, name: "MySQL", proficiency: "Advanced" },
-        { id: 7, name: "Git & GitHub", proficiency: "Expert" },
-        { id: 8, name: "REST APIs", proficiency: "Master" },
-    ]);
+    const [skills, setSkills] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    // Delete confirmation state
+    const [deleteTargetId, setDeleteTargetId] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Skill modal state
     const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
     const [editingSkillId, setEditingSkillId] = useState(null);
     const [skillForm, setSkillForm] = useState({
         name: "",
-        proficiency: "Intermediate",
+        proficiency_level: "Intermediate",
     });
-    const [showSkillSuccess, setShowSkillSuccess] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
 
-    // Handlers
+    const getCsrfToken = () => {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    };
+
+    const showToast = (text, type = "success", duration = 3000) => {
+        setToast({ text, type, duration });
+    };
+
+    const fetchSkills = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch("/candidate/skills", {
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                },
+            });
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                setSkills(json.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch skills:", err);
+            showToast("Failed to load skills", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSkills();
+    }, []);
+
     const handleOpenAddSkill = () => {
         setEditingSkillId(null);
         setSkillForm({
             name: "",
-            proficiency: "Intermediate",
+            proficiency_level: "Intermediate",
         });
+        setFormErrors({});
         setIsSkillModalOpen(true);
     };
 
     const handleOpenEditSkill = (item) => {
         setEditingSkillId(item.id);
+        const currentProficiency =
+            item.pivot?.proficiency_level || item.proficiency_level || item.proficiency || "Intermediate";
         setSkillForm({
-            name: item.name,
-            proficiency: item.proficiency || "Intermediate",
+            name: item.name || "",
+            proficiency_level: currentProficiency,
         });
+        setFormErrors({});
         setIsSkillModalOpen(true);
     };
 
-    const handleSaveSkillSubmit = (e) => {
+    const handleSaveSkillSubmit = async (e) => {
         e.preventDefault();
-        if (!skillForm.name.trim()) return;
+        setFormErrors({});
+        setIsSubmitting(true);
 
-        if (editingSkillId) {
-            setSkills((prev) =>
-                prev.map((item) =>
-                    item.id === editingSkillId ? { ...item, ...skillForm } : item
-                )
-            );
-        } else {
-            const newSkill = {
-                id: Date.now(),
-                ...skillForm,
-            };
-            setSkills((prev) => [...prev, newSkill]);
+        const payload = editingSkillId
+            ? { proficiency_level: skillForm.proficiency_level }
+            : {
+                  name: skillForm.name,
+                  proficiency_level: skillForm.proficiency_level,
+              };
+
+        const url = editingSkillId
+            ? `/candidate/skills/${editingSkillId}`
+            : "/candidate/skills";
+
+        try {
+            const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const json = await res.json();
+
+            if (res.status === 422 || json.errors) {
+                setFormErrors(json.errors || {});
+                return;
+            }
+
+            if (json.success) {
+                showToast(
+                    json.message ||
+                        (editingSkillId
+                            ? "Skill updated successfully!"
+                            : "Skill added successfully!"),
+                    "success"
+                );
+                setIsSkillModalOpen(false);
+                fetchSkills();
+            } else {
+                showToast(json.message || json.error || "Failed to save skill", "error");
+            }
+        } catch (err) {
+            console.error("Save skill error:", err);
+            showToast("Server exception while saving skill", "error");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setIsSkillModalOpen(false);
-        setShowSkillSuccess(true);
-        setTimeout(() => setShowSkillSuccess(false), 3000);
     };
 
-    const handleDeleteSkill = (id) => {
-        setSkills((prev) => prev.filter((item) => item.id !== id));
+    const handlePromptDeleteSkill = (id) => {
+        setDeleteTargetId(id);
+    };
+
+    const confirmDeleteSkill = async () => {
+        if (!deleteTargetId) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/candidate/skills/${deleteTargetId}`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                showToast("Skill removed successfully!", "success");
+                setSkills((prev) => prev.filter((item) => item.id !== deleteTargetId));
+                setDeleteTargetId(null);
+            } else {
+                showToast(json.message || json.error || "Failed to remove skill", "error");
+            }
+        } catch (err) {
+            console.error("Delete skill error:", err);
+            showToast("Server exception while removing skill", "error");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     const getProficiencyBadgeClass = (level) => {
@@ -83,12 +179,8 @@ export default function SkillsTab() {
                 return "bg-[#F1F2F4] text-[#5E6670] border-[#E4E5E8]";
             case "Intermediate":
                 return "bg-[#E8F1FF] text-[#0A65CC] border-[#0A65CC]/30";
-            case "Advanced":
-                return "bg-[#EAF6ED] text-[#0BA02C] border-[#0BA02C]/30";
             case "Expert":
                 return "bg-[#FFF6E6] text-[#E08A00] border-[#E08A00]/30";
-            case "Master":
-                return "bg-[#F3E8FF] text-[#7E22CE] border-[#7E22CE]/30";
             default:
                 return "bg-[#E8F1FF] text-[#0A65CC] border-[#0A65CC]/30";
         }
@@ -96,12 +188,7 @@ export default function SkillsTab() {
 
     return (
         <div className="space-y-6 max-w-4xl">
-            {showSkillSuccess && (
-                <div className="p-4 bg-[#EAF6ED] border border-[#0BA02C]/20 rounded-none text-[#0BA02C] text-xs sm:text-sm font-semibold flex items-center gap-2 animate-fadeIn">
-                    <Check className="w-4 h-4" />
-                    <span>Skills updated successfully!</span>
-                </div>
-            )}
+            <Toast toast={toast} onClose={() => setToast(null)} />
 
             <div className="flex items-center justify-between pb-2 border-b border-[#E4E5E8]">
                 <div className="flex items-center gap-3">
@@ -129,7 +216,12 @@ export default function SkillsTab() {
             </div>
 
             {/* Flat Skills List */}
-            {skills.length === 0 ? (
+            {isLoading ? (
+                <div className="p-8 text-center text-[#767E94]">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0A65CC]" />
+                    <p className="text-xs mt-2 font-semibold">Loading skills...</p>
+                </div>
+            ) : skills.length === 0 ? (
                 <div className="p-8 border border-dashed border-[#E4E5E8] bg-[#F8F9FA] text-center space-y-3">
                     <Wrench className="w-12 h-12 text-[#9199A3] mx-auto" />
                     <h4 className="text-sm font-bold text-[#18191C]">
@@ -148,44 +240,52 @@ export default function SkillsTab() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {skills.map((item) => (
-                        <div
-                            key={item.id}
-                            className="p-3.5 border border-[#E4E5E8] bg-white rounded-none hover:border-[#0A65CC]/40 transition-all flex items-center justify-between gap-2"
-                        >
-                            <div className="space-y-1 min-w-0">
-                                <h4 className="text-sm font-bold text-[#18191C] truncate">
-                                    {item.name}
-                                </h4>
-                                <span
-                                    className={`inline-block px-2 py-0.5 text-[11px] font-semibold border rounded-none ${getProficiencyBadgeClass(
-                                        item.proficiency
-                                    )}`}
-                                >
-                                    {item.proficiency}
-                                </span>
-                            </div>
+                    {skills.map((item) => {
+                        const level =
+                            item.pivot?.proficiency_level ||
+                            item.proficiency_level ||
+                            item.proficiency ||
+                            "Intermediate";
 
-                            <div className="flex items-center gap-1 shrink-0">
-                                <button
-                                    type="button"
-                                    onClick={() => handleOpenEditSkill(item)}
-                                    className="p-1.5 text-[#767E94] hover:text-[#0A65CC] hover:bg-[#F1F2F4] transition-colors cursor-pointer"
-                                    title="Edit Skill"
-                                >
-                                    <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleDeleteSkill(item.id)}
-                                    className="p-1.5 text-[#767E94] hover:text-[#E05151] hover:bg-[#FFF0F0] transition-colors cursor-pointer"
-                                    title="Delete Skill"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                        return (
+                            <div
+                                key={item.id}
+                                className="p-3.5 border border-[#E4E5E8] bg-white rounded-none hover:border-[#0A65CC]/40 transition-all flex items-center justify-between gap-2"
+                            >
+                                <div className="space-y-1 min-w-0">
+                                    <h4 className="text-sm font-bold text-[#18191C] truncate">
+                                        {item.name}
+                                    </h4>
+                                    <span
+                                        className={`inline-block px-2 py-0.5 text-[11px] font-semibold border rounded-none ${getProficiencyBadgeClass(
+                                            level
+                                        )}`}
+                                    >
+                                        {level}
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleOpenEditSkill(item)}
+                                        className="p-1.5 text-[#767E94] hover:text-[#0A65CC] hover:bg-[#F1F2F4] transition-colors cursor-pointer"
+                                        title="Edit Skill"
+                                    >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handlePromptDeleteSkill(item.id)}
+                                        className="p-1.5 text-[#767E94] hover:text-[#E05151] hover:bg-[#FFF0F0] transition-colors cursor-pointer"
+                                        title="Delete Skill"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -225,38 +325,49 @@ export default function SkillsTab() {
 
                             <form onSubmit={handleSaveSkillSubmit} className="p-6 space-y-4">
                                 <div>
-                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Skill Name *
-                                    </label>
                                     <input
                                         type="text"
-                                        required
+                                        name="name"
+                                        disabled={Boolean(editingSkillId)}
                                         value={skillForm.name}
-                                        onChange={(e) =>
-                                            setSkillForm({ ...skillForm, name: e.target.value })
-                                        }
-                                        placeholder="e.g. React.js, Python, Figma"
-                                        className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
+                                        onChange={(e) => {
+                                            setSkillForm({ ...skillForm, name: e.target.value });
+                                            if (formErrors.name) setFormErrors({ ...formErrors, name: null });
+                                        }}
+                                        placeholder="Skill Name *"
+                                        className={`w-full h-12 px-4 text-sm bg-white border ${
+                                            formErrors.name ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                        } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8] disabled:bg-[#F8F9FA]`}
                                     />
+                                    {formErrors.name && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {formErrors.name[0]}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-semibold text-[#18191C] block mb-1">
-                                        Proficiency Level *
-                                    </label>
                                     <select
-                                        value={skillForm.proficiency}
-                                        onChange={(e) =>
-                                            setSkillForm({ ...skillForm, proficiency: e.target.value })
-                                        }
-                                        className="w-full h-12 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors text-[#18191C] font-medium cursor-pointer"
+                                        name="proficiency_level"
+                                        value={skillForm.proficiency_level}
+                                        onChange={(e) => {
+                                            setSkillForm({ ...skillForm, proficiency_level: e.target.value });
+                                            if (formErrors.proficiency_level) setFormErrors({ ...formErrors, proficiency_level: null });
+                                        }}
+                                        className={`w-full h-12 px-4 text-sm bg-white border ${
+                                            formErrors.proficiency_level ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                        } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors text-[#18191C]`}
                                     >
+                                        <option value="" disabled>Proficiency Level *</option>
                                         <option value="Beginner">Beginner</option>
                                         <option value="Intermediate">Intermediate</option>
-                                        <option value="Advanced">Advanced</option>
                                         <option value="Expert">Expert</option>
-                                        <option value="Master">Master</option>
                                     </select>
+                                    {formErrors.proficiency_level && (
+                                        <p className="text-xs text-[#E05151] mt-1 font-medium">
+                                            {formErrors.proficiency_level[0]}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E4E5E8]">
@@ -269,9 +380,11 @@ export default function SkillsTab() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 h-12 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-sm rounded-none border-none shadow-xs transition-colors cursor-pointer"
+                                        disabled={isSubmitting}
+                                        className="px-6 h-12 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-sm rounded-none border-none shadow-xs transition-colors cursor-pointer flex items-center gap-2"
                                     >
-                                        {editingSkillId ? "Update Skill" : "Save Skill"}
+                                        {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                        <span>{editingSkillId ? "Update Skill" : "Save Skill"}</span>
                                     </button>
                                 </div>
                             </form>
@@ -279,6 +392,15 @@ export default function SkillsTab() {
                     </div>
                 )}
             </AnimatePresence>
+
+            <DeleteConfirmationModal
+                isOpen={Boolean(deleteTargetId)}
+                onClose={() => setDeleteTargetId(null)}
+                onConfirm={confirmDeleteSkill}
+                isDeleting={isDeleting}
+                title="Remove Skill"
+                message="Are you sure you want to remove this skill? This action cannot be undone."
+            />
         </div>
     );
 }

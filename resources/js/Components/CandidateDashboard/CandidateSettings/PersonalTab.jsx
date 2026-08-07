@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import DatePickerInput from "@/Components/CompanyProfile/DatePickerInput";
 import Toast from "@/Components/Toast";
+import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
 
 export default function PersonalTab() {
     // File input refs
@@ -21,6 +22,10 @@ export default function PersonalTab() {
     const bannerPicInputRef = useRef(null);
     const cnicInputRef = useRef(null);
     const cvFileInputRef = useRef(null);
+
+    // Delete confirmation state for CV
+    const [deleteTargetCvId, setDeleteTargetCvId] = useState(null);
+    const [isDeletingCv, setIsDeletingCv] = useState(false);
 
     // Image previews state
     const [profilePicPreview, setProfilePicPreview] = useState(null);
@@ -347,10 +352,16 @@ export default function PersonalTab() {
         }
     };
 
-    const handleDeleteCv = async (id) => {
+    const handlePromptDeleteCv = (id) => {
         setActiveMenuId(null);
+        setDeleteTargetCvId(id);
+    };
+
+    const confirmDeleteCv = async () => {
+        if (!deleteTargetCvId) return;
+        setIsDeletingCv(true);
         try {
-            const res = await fetch(`/candidate/resumes/${id}`, {
+            const res = await fetch(`/candidate/resumes/${deleteTargetCvId}`, {
                 method: "DELETE",
                 headers: {
                     "X-CSRF-TOKEN": getCsrfToken(),
@@ -359,11 +370,17 @@ export default function PersonalTab() {
             });
             const json = await res.json();
             if (json.success) {
-                setResumes((prev) => prev.filter((r) => r.id !== id));
+                setResumes((prev) => prev.filter((r) => r.id !== deleteTargetCvId));
                 showToast("Resume deleted successfully!", "success");
+                setDeleteTargetCvId(null);
+            } else {
+                showToast(json.message || json.error || "Failed to delete resume", "error");
             }
         } catch (err) {
             console.error("Failed to delete resume:", err);
+            showToast("Server exception while deleting resume", "error");
+        } finally {
+            setIsDeletingCv(false);
         }
     };
 
@@ -904,7 +921,7 @@ export default function PersonalTab() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDeleteCv(res.id)}
+                                                    onClick={() => handlePromptDeleteCv(res.id)}
                                                     className="w-full px-3 py-1.5 text-left text-xs text-[#E05151] hover:bg-[#FFF0F0] flex items-center gap-2 cursor-pointer font-semibold"
                                                 >
                                                     <Trash2 className="w-3.5 h-3.5" />
@@ -1045,6 +1062,15 @@ export default function PersonalTab() {
                     </div>
                 )}
             </AnimatePresence>
+
+            <DeleteConfirmationModal
+                isOpen={Boolean(deleteTargetCvId)}
+                onClose={() => setDeleteTargetCvId(null)}
+                onConfirm={confirmDeleteCv}
+                isDeleting={isDeletingCv}
+                title="Delete Resume"
+                message="Are you sure you want to delete this resume? This action cannot be undone."
+            />
         </div>
     );
 }

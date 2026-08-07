@@ -1,21 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Share2,
     Plus,
     Trash2,
     Check,
     Globe,
+    Loader2,
 } from "lucide-react";
+import Toast from "@/Components/Toast";
+import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
 
 export default function SocialLinksTab() {
-    // Social links list state
-    const [socialLinks, setSocialLinks] = useState([
-        { id: 1, platform: "LinkedIn", url: "https://linkedin.com/in/username" },
-        { id: 2, platform: "GitHub", url: "https://github.com/username" },
-        { id: 3, platform: "Twitter / X", url: "https://x.com/username" },
-    ]);
+    const [socialLinks, setSocialLinks] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [formErrors, setFormErrors] = useState({});
 
-    const [showSocialSuccess, setShowSocialSuccess] = useState(false);
+    // Delete confirmation state
+    const [deleteTargetItem, setDeleteTargetItem] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const platformOptions = [
         "LinkedIn",
@@ -30,8 +34,41 @@ export default function SocialLinksTab() {
         "Other",
     ];
 
+    const getCsrfToken = () => {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    };
+
+    const showToast = (text, type = "success", duration = 3000) => {
+        setToast({ text, type, duration });
+    };
+
+    const fetchSocialLinks = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch("/candidate/social-links", {
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                },
+            });
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+                setSocialLinks(json.data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch social links:", err);
+            showToast("Failed to load social links", "error");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchSocialLinks();
+    }, []);
+
     const getPlatformIcon = (platform) => {
-        switch (platform.toLowerCase()) {
+        switch ((platform || "").toLowerCase()) {
             case "linkedin":
                 return (
                     <svg className="w-4 h-4 text-[#0A66C2] shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -69,10 +106,11 @@ export default function SocialLinksTab() {
     };
 
     const handleAddSocialLink = () => {
+        const tempId = "new_" + Date.now();
         const newLink = {
-            id: Date.now(),
-            platform: "LinkedIn",
-            url: "",
+            id: tempId,
+            platform_name: "LinkedIn",
+            profile_url: "",
         };
         setSocialLinks((prev) => [...prev, newLink]);
     };
@@ -83,24 +121,87 @@ export default function SocialLinksTab() {
         );
     };
 
-    const handleDeleteSocialLink = (id) => {
-        setSocialLinks((prev) => prev.filter((item) => item.id !== id));
+    const handlePromptDeleteSocialLink = (item) => {
+        if (!item.id || String(item.id).startsWith("new_")) {
+            setSocialLinks((prev) => prev.filter((i) => i.id !== item.id));
+            return;
+        }
+        setDeleteTargetItem(item);
     };
 
-    const handleSaveSocialLinks = (e) => {
+    const confirmDeleteSocialLink = async () => {
+        if (!deleteTargetItem) return;
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/candidate/social-links/${deleteTargetItem.id}`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+            });
+
+            const json = await res.json();
+            if (json.success) {
+                showToast("Social link deleted successfully!", "success");
+                setSocialLinks((prev) => prev.filter((i) => i.id !== deleteTargetItem.id));
+                setDeleteTargetItem(null);
+            } else {
+                showToast(json.message || json.error || "Failed to delete social link", "error");
+            }
+        } catch (err) {
+            console.error("Delete social link error:", err);
+            showToast("Server exception while deleting social link", "error");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleSaveSocialLinks = async (e) => {
         if (e) e.preventDefault();
-        setShowSocialSuccess(true);
-        setTimeout(() => setShowSocialSuccess(false), 3000);
+        setFormErrors({});
+        setIsSubmitting(true);
+
+        const linksPayload = socialLinks.map((item) => ({
+            platform_name: item.platform_name || item.platform || "Other",
+            profile_url: item.profile_url || item.url || "",
+        }));
+
+        try {
+            const res = await fetch("/candidate/social-links", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": getCsrfToken(),
+                    Accept: "application/json",
+                },
+                body: JSON.stringify({ links: linksPayload }),
+            });
+
+            const json = await res.json();
+
+            if (res.status === 422 || json.errors) {
+                setFormErrors(json.errors || {});
+                return;
+            }
+
+            if (json.success) {
+                showToast(json.message || "Social links saved successfully!", "success");
+                fetchSocialLinks();
+            } else {
+                showToast(json.message || json.error || "Failed to save social links", "error");
+            }
+        } catch (err) {
+            console.error("Save social links error:", err);
+            showToast("Server exception while saving social links", "error");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <div className="space-y-6 max-w-4xl">
-            {showSocialSuccess && (
-                <div className="p-4 bg-[#EAF6ED] border border-[#0BA02C]/20 rounded-none text-[#0BA02C] text-xs sm:text-sm font-semibold flex items-center gap-2 animate-fadeIn">
-                    <Check className="w-4 h-4" />
-                    <span>Social links saved successfully!</span>
-                </div>
-            )}
+            <Toast toast={toast} onClose={() => setToast(null)} />
 
             <div className="flex items-center justify-between pb-2 border-b border-[#E4E5E8]">
                 <div className="flex items-center gap-3">
@@ -127,85 +228,136 @@ export default function SocialLinksTab() {
                 </button>
             </div>
 
-            <form onSubmit={handleSaveSocialLinks} className="space-y-4">
-                {socialLinks.length === 0 ? (
-                    <div className="p-8 border border-dashed border-[#E4E5E8] bg-[#F8F9FA] text-center space-y-3">
-                        <Share2 className="w-12 h-12 text-[#9199A3] mx-auto" />
-                        <h4 className="text-sm font-bold text-[#18191C]">
-                            No Social Links Added
-                        </h4>
-                        <p className="text-xs text-[#767E94] max-w-md mx-auto">
-                            Adding social profiles like LinkedIn and GitHub increases recruiter engagement.
+            {isLoading ? (
+                <div className="p-8 text-center text-[#767E94]">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#0A65CC]" />
+                    <p className="text-xs mt-2 font-semibold">Loading social links...</p>
+                </div>
+            ) : (
+                <form onSubmit={handleSaveSocialLinks} className="space-y-4">
+                    {socialLinks.length === 0 ? (
+                        <div className="p-8 border border-dashed border-[#E4E5E8] bg-[#F8F9FA] text-center space-y-3">
+                            <Share2 className="w-12 h-12 text-[#9199A3] mx-auto" />
+                            <h4 className="text-sm font-bold text-[#18191C]">
+                                No Social Links Added
+                            </h4>
+                            <p className="text-xs text-[#767E94] max-w-md mx-auto">
+                                Adding social profiles like LinkedIn and GitHub increases recruiter engagement.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleAddSocialLink}
+                                className="px-5 py-2.5 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-xs rounded-none border-none cursor-pointer"
+                            >
+                                Add Social Link
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {socialLinks.map((item, index) => {
+                                const platformVal = item.platform_name || item.platform || "LinkedIn";
+                                const urlVal = item.profile_url || item.url || "";
+                                const urlError =
+                                    formErrors[`links.${index}.profile_url`]?.[0] ||
+                                    formErrors[`links.${index}.platform_name`]?.[0];
+
+                                return (
+                                    <div key={item.id || index} className="space-y-1">
+                                        <div className="flex items-center gap-3 bg-white p-3 border border-[#E4E5E8] rounded-none flex-col sm:flex-row">
+                                            {/* Platform Dropdown */}
+                                            <div className="flex items-center gap-2.5 w-full sm:w-56 shrink-0 bg-[#F8F9FA] px-3 h-11 border border-[#E4E5E8]">
+                                                {getPlatformIcon(platformVal)}
+                                                <select
+                                                    value={platformVal}
+                                                    onChange={(e) =>
+                                                        handleUpdateSocialLink(
+                                                            item.id,
+                                                            item.platform_name !== undefined ? "platform_name" : "platform",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="w-full h-full bg-transparent text-xs font-bold text-[#18191C] focus:outline-none cursor-pointer"
+                                                >
+                                                    {platformOptions.map((opt) => (
+                                                        <option key={opt} value={opt}>
+                                                            {opt}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* URL Input */}
+                                            <div className="flex-1 w-full">
+                                                <input
+                                                    type="text"
+                                                    value={urlVal}
+                                                    onChange={(e) => {
+                                                        handleUpdateSocialLink(
+                                                            item.id,
+                                                            item.profile_url !== undefined ? "profile_url" : "url",
+                                                            e.target.value
+                                                        );
+                                                        if (formErrors[`links.${index}.profile_url`]) {
+                                                            const newErrs = { ...formErrors };
+                                                            delete newErrs[`links.${index}.profile_url`];
+                                                            setFormErrors(newErrs);
+                                                        }
+                                                    }}
+                                                    placeholder={`https://${platformVal.toLowerCase().replace(/[^a-z0-9]/g, "")}.com/...`}
+                                                    className={`w-full h-11 px-4 text-sm bg-white border ${
+                                                        urlError ? "border-[#E05151]" : "border-[#E4E5E8]"
+                                                    } rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]`}
+                                                />
+                                            </div>
+
+                                            {/* Delete Button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => handlePromptDeleteSocialLink(item)}
+                                                className="p-2.5 text-[#767E94] hover:text-[#E05151] hover:bg-[#FFF0F0] transition-colors rounded-none shrink-0 self-end sm:self-center cursor-pointer"
+                                                title="Remove link"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        {urlError && (
+                                            <p className="text-xs text-[#E05151] font-medium pl-1">
+                                                {urlError}
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {formErrors.links && (
+                        <p className="text-xs text-[#E05151] font-medium">
+                            {formErrors.links[0]}
                         </p>
+                    )}
+
+                    <div className="pt-4">
                         <button
-                            type="button"
-                            onClick={handleAddSocialLink}
-                            className="px-5 py-2.5 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-xs rounded-none border-none cursor-pointer"
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="px-6 py-3 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-xs sm:text-sm rounded-none border-none shadow-xs cursor-pointer transition-colors flex items-center gap-2"
                         >
-                            Add Social Link
+                            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                            <span>Save Social Links</span>
                         </button>
                     </div>
-                ) : (
-                    <div className="space-y-3">
-                        {socialLinks.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex items-center gap-3 bg-white p-3 border border-[#E4E5E8] rounded-none flex-col sm:flex-row"
-                            >
-                                {/* Platform Dropdown */}
-                                <div className="flex items-center gap-2.5 w-full sm:w-56 shrink-0 bg-[#F8F9FA] px-3 h-11 border border-[#E4E5E8]">
-                                    {getPlatformIcon(item.platform)}
-                                    <select
-                                        value={item.platform}
-                                        onChange={(e) =>
-                                            handleUpdateSocialLink(item.id, "platform", e.target.value)
-                                        }
-                                        className="w-full h-full bg-transparent text-xs font-bold text-[#18191C] focus:outline-none cursor-pointer"
-                                    >
-                                        {platformOptions.map((opt) => (
-                                            <option key={opt} value={opt}>
-                                                {opt}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                </form>
+            )}
 
-                                {/* URL Input */}
-                                <div className="flex-1 w-full">
-                                    <input
-                                        type="url"
-                                        value={item.url}
-                                        onChange={(e) =>
-                                            handleUpdateSocialLink(item.id, "url", e.target.value)
-                                        }
-                                        placeholder={`https://${item.platform.toLowerCase().replace(/[^a-z0-9]/g, "")}.com/...`}
-                                        className="w-full h-11 px-4 text-sm bg-white border border-[#E4E5E8] rounded-none focus:ring-1 focus:ring-[#0A65CC] focus:border-[#0A65CC] transition-colors placeholder:text-[#9199A8]"
-                                    />
-                                </div>
-
-                                {/* Delete Button */}
-                                <button
-                                    type="button"
-                                    onClick={() => handleDeleteSocialLink(item.id)}
-                                    className="p-2.5 text-[#767E94] hover:text-[#E05151] hover:bg-[#FFF0F0] transition-colors rounded-none shrink-0 self-end sm:self-center cursor-pointer"
-                                    title="Remove link"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                <div className="pt-4">
-                    <button
-                        type="submit"
-                        className="px-6 py-3 bg-[#0A65CC] hover:bg-[#0851A8] text-white font-bold text-xs sm:text-sm rounded-none border-none shadow-xs cursor-pointer transition-colors"
-                    >
-                        Save Social Links
-                    </button>
-                </div>
-            </form>
+            <DeleteConfirmationModal
+                isOpen={Boolean(deleteTargetItem)}
+                onClose={() => setDeleteTargetItem(null)}
+                onConfirm={confirmDeleteSocialLink}
+                isDeleting={isDeleting}
+                title="Remove Social Link"
+                message="Are you sure you want to remove this social link? This action cannot be undone."
+            />
         </div>
     );
 }

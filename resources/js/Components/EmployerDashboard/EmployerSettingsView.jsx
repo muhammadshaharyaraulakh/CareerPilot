@@ -15,10 +15,15 @@ import {
     ChevronDown,
 } from "lucide-react";
 import DatePickerInput from "@/Components/CompanyProfile/DatePickerInput";
+import DeleteConfirmationModal from "@/Components/DeleteConfirmationModal";
 
 export default function EmployerSettingsView() {
     const [activeTab, setActiveTab] = useState("account"); // Defaulting or switching between 'company', 'founding', 'social', 'account'
     const [showSuccessMsg, setShowSuccessMsg] = useState(false);
+
+    // Delete account modal state
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
     // Image previews
     const logoInputRef = useRef(null);
@@ -715,11 +720,7 @@ export default function EmployerSettingsView() {
                         <div>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    if (confirm("Are you sure you want to close your company account?")) {
-                                        alert("Account deletion request submitted.");
-                                    }
-                                }}
+                                onClick={() => setIsDeleteModalOpen(true)}
                                 className="inline-flex items-center gap-2 text-[#E05151] hover:text-[#C93B3B] text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                             >
                                 <XCircle className="w-4 h-4 text-[#E05151]" />
@@ -729,6 +730,22 @@ export default function EmployerSettingsView() {
                     </div>
                 </div>
             )}
+
+            <DeleteConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={() => {
+                    setIsDeletingAccount(true);
+                    setTimeout(() => {
+                        setIsDeletingAccount(false);
+                        setIsDeleteModalOpen(false);
+                        setShowSuccessMsg(true);
+                    }, 600);
+                }}
+                isDeleting={isDeletingAccount}
+                title="Close Company Account"
+                message="Are you sure you want to close your company account? All posted jobs, applicant records, and company profile data will be permanently removed. This action cannot be undone."
+            />
         </div>
     );
 }
